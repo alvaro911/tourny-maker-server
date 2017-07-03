@@ -434,6 +434,8 @@ var _expressValidation = __webpack_require__(13);
 
 var _expressValidation2 = _interopRequireDefault(_expressValidation);
 
+var _auth = __webpack_require__(37);
+
 var _user = __webpack_require__(8);
 
 var userController = _interopRequireWildcard(_user);
@@ -446,11 +448,10 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// import authLocal from '../../models/user/user.model';
 const routes = (0, _express.Router)();
 
 routes.post('/signup', (0, _expressValidation2.default)(_user3.default.signup), userController.signUp);
-routes.post('/login', userController.login);
+routes.post('/login', _auth.authLocal, userController.login);
 
 exports.default = routes;
 
@@ -2505,6 +2506,201 @@ module.exports = function(obj){
 /***/ (function(module, exports) {
 
 module.exports = require("util");
+
+/***/ }),
+/* 33 */,
+/* 34 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * Module dependencies.
+ */
+var Strategy = __webpack_require__(35);
+
+
+/**
+ * Expose `Strategy` directly from package.
+ */
+exports = module.exports = Strategy;
+
+/**
+ * Export constructors.
+ */
+exports.Strategy = Strategy;
+
+
+/***/ }),
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * Module dependencies.
+ */
+var passport = __webpack_require__(20)
+  , util = __webpack_require__(32)
+  , lookup = __webpack_require__(36).lookup;
+
+
+/**
+ * `Strategy` constructor.
+ *
+ * The local authentication strategy authenticates requests based on the
+ * credentials submitted through an HTML-based login form.
+ *
+ * Applications must supply a `verify` callback which accepts `username` and
+ * `password` credentials, and then calls the `done` callback supplying a
+ * `user`, which should be set to `false` if the credentials are not valid.
+ * If an exception occured, `err` should be set.
+ *
+ * Optionally, `options` can be used to change the fields in which the
+ * credentials are found.
+ *
+ * Options:
+ *   - `usernameField`  field name where the username is found, defaults to _username_
+ *   - `passwordField`  field name where the password is found, defaults to _password_
+ *   - `passReqToCallback`  when `true`, `req` is the first argument to the verify callback (default: `false`)
+ *
+ * Examples:
+ *
+ *     passport.use(new LocalStrategy(
+ *       function(username, password, done) {
+ *         User.findOne({ username: username, password: password }, function (err, user) {
+ *           done(err, user);
+ *         });
+ *       }
+ *     ));
+ *
+ * @param {Object} options
+ * @param {Function} verify
+ * @api public
+ */
+function Strategy(options, verify) {
+  if (typeof options == 'function') {
+    verify = options;
+    options = {};
+  }
+  if (!verify) { throw new TypeError('LocalStrategy requires a verify callback'); }
+  
+  this._usernameField = options.usernameField || 'username';
+  this._passwordField = options.passwordField || 'password';
+  
+  passport.Strategy.call(this);
+  this.name = 'local';
+  this._verify = verify;
+  this._passReqToCallback = options.passReqToCallback;
+}
+
+/**
+ * Inherit from `passport.Strategy`.
+ */
+util.inherits(Strategy, passport.Strategy);
+
+/**
+ * Authenticate request based on the contents of a form submission.
+ *
+ * @param {Object} req
+ * @api protected
+ */
+Strategy.prototype.authenticate = function(req, options) {
+  options = options || {};
+  var username = lookup(req.body, this._usernameField) || lookup(req.query, this._usernameField);
+  var password = lookup(req.body, this._passwordField) || lookup(req.query, this._passwordField);
+  
+  if (!username || !password) {
+    return this.fail({ message: options.badRequestMessage || 'Missing credentials' }, 400);
+  }
+  
+  var self = this;
+  
+  function verified(err, user, info) {
+    if (err) { return self.error(err); }
+    if (!user) { return self.fail(info); }
+    self.success(user, info);
+  }
+  
+  try {
+    if (self._passReqToCallback) {
+      this._verify(req, username, password, verified);
+    } else {
+      this._verify(username, password, verified);
+    }
+  } catch (ex) {
+    return self.error(ex);
+  }
+};
+
+
+/**
+ * Expose `Strategy`.
+ */
+module.exports = Strategy;
+
+
+/***/ }),
+/* 36 */
+/***/ (function(module, exports) {
+
+exports.lookup = function(obj, field) {
+  if (!obj) { return null; }
+  var chain = field.split(']').join('').split('[');
+  for (var i = 0, len = chain.length; i < len; i++) {
+    var prop = obj[chain[i]];
+    if (typeof(prop) === 'undefined') { return null; }
+    if (typeof(prop) !== 'object') { return prop; }
+    obj = prop;
+  }
+  return null;
+};
+
+
+/***/ }),
+/* 37 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.authLocal = undefined;
+
+var _passport = __webpack_require__(28);
+
+var _passport2 = _interopRequireDefault(_passport);
+
+var _passportLocal = __webpack_require__(34);
+
+var _passportLocal2 = _interopRequireDefault(_passportLocal);
+
+var _user = __webpack_require__(9);
+
+var _user2 = _interopRequireDefault(_user);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const localOptions = {
+  usernameField: 'email'
+};
+
+const localStg = new _passportLocal2.default(localOptions, async (email, password, done) => {
+  try {
+    const user = await _user2.default.findOne({ email });
+    if (!user) {
+      return done(null, false);
+    } else if (!user.authUser(password)) {
+      return done(null, false);
+    }
+
+    return done(null, user);
+  } catch (e) {
+    return done(e, false);
+  }
+});
+
+_passport2.default.use(localStg);
+
+const authLocal = exports.authLocal = _passport2.default.authenticate('local', { session: false });
 
 /***/ })
 /******/ ]);

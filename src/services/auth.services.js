@@ -7,7 +7,7 @@ const localOptions = {
   usernameField: 'email',
 };
 
-const localStg = new LocalStrategy(localOptions, async (email, password, done) => 
+const localStg = new LocalStrategy(localOptions, async (email, password, done) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
@@ -17,7 +17,6 @@ const localStg = new LocalStrategy(localOptions, async (email, password, done) =
     }
 
     return done(null, user);
-
   } catch (e) {
     return done(e, false);
   }
