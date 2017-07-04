@@ -1,5 +1,6 @@
 const devConfig = {
   MONGO_URL: 'mongodb://localhost/tourny-maker-dev',
+  JWT_SECRET: 'aSecretKey',
 };
 
 const testConfig = {
