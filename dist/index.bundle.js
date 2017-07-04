@@ -439,11 +439,16 @@ var _tournament = __webpack_require__(13);
 
 var _tournament2 = _interopRequireDefault(_tournament);
 
+var _team = __webpack_require__(30);
+
+var _team2 = _interopRequireDefault(_team);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = app => {
   app.use('/api/v1/users', _user2.default);
   app.use('/api/v1/tournament', _tournament2.default);
+  app.use('/api/v1/team', _team2.default);
 };
 
 /***/ }),
@@ -763,6 +768,113 @@ module.exports = require("passport-local");
 /***/ (function(module, exports) {
 
 module.exports = require("validator");
+
+/***/ }),
+/* 27 */,
+/* 28 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createTeam = createTeam;
+
+var _team = __webpack_require__(29);
+
+var _team2 = _interopRequireDefault(_team);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+async function createTeam(req, res) {
+  try {
+    const team = await _team2.default.createTeam(req.body, req.user._id);
+    return res.status(201).json(team);
+  } catch (e) {
+    return res.status(400).json(e);
+  }
+}
+
+/***/ }),
+/* 29 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _mongoose = __webpack_require__(2);
+
+var _mongoose2 = _interopRequireDefault(_mongoose);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const TeamSchema = new _mongoose.Schema({
+  teamName: {
+    type: String,
+    trim: true,
+    unique: true,
+    required: [true, 'Team name is required']
+  },
+  players: [{
+    playerName: {
+      type: String,
+      trim: true,
+      required: [true, 'Need a player name']
+    },
+    playerNumber: {
+      type: Number,
+      trim: true,
+      required: [true, 'Need a player number']
+    }
+  }],
+  user: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }
+});
+
+TeamSchema.statics = {
+  createTeam(args, user) {
+    return this.create(Object.assign({}, args, {
+      user
+    }));
+  }
+};
+
+exports.default = _mongoose2.default.model('Team', TeamSchema);
+
+/***/ }),
+/* 30 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _express = __webpack_require__(1);
+
+var _team = __webpack_require__(28);
+
+var TeamController = _interopRequireWildcard(_team);
+
+var _auth = __webpack_require__(5);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+const routes = (0, _express.Router)();
+
+routes.post('/createTeam', _auth.authJwt, TeamController.createTeam);
+
+exports.default = routes;
 
 /***/ })
 /******/ ]);
