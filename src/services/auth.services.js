@@ -25,13 +25,13 @@ const localStg = new LocalStrategy(localOptions, async (email, password, done) =
 });
 
 const jwtOptions = {
-  jwtFromRequest: ExtractJwt.fromAuthHeader('authorization'),
+  jwtFromRequest: ExtractJwt.fromAuthHeader('Authorization'),
   secretOrKey: constants.JWT_SECRET,
 };
 
 const jwtStrategy = new JWTStrategy(jwtOptions, async (payload, done) => {
   try {
-    const user = await User.FindById(payload._id);
+    const user = await User.findById(payload._id);
 
     if (!user) {
       return done(null, false);
