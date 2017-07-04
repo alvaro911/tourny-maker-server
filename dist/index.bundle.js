@@ -248,11 +248,13 @@ const passwordReg = exports.passwordReg = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/;
 
 exports.default = {
   signup: {
-    email: _joi2.default.string().email().required(),
-    password: _joi2.default.string().regex(passwordReg).required(),
-    firstName: _joi2.default.string().required(),
-    lastName: _joi2.default.string().required(),
-    username: _joi2.default.string().required()
+    body: {
+      email: _joi2.default.string().email().required(),
+      password: _joi2.default.string().regex(passwordReg).required(),
+      firstName: _joi2.default.string().required(),
+      lastName: _joi2.default.string().required(),
+      username: _joi2.default.string().required()
+    }
   }
 };
 
@@ -549,7 +551,7 @@ const TournamentSchema = new _mongoose.Schema({
     trim: true,
     required: [true, 'Tournament name is required!']
   },
-  numberOftournaments: {
+  numberOfTeams: {
     type: Number,
     default: 0,
     trim: true,
@@ -560,11 +562,13 @@ const TournamentSchema = new _mongoose.Schema({
     trim: true,
     required: [true, 'A minimum amount of players has to be set']
   },
+  // TODO: change this to be a date type
   tournamentStarts: {
     type: String,
     trim: true,
     required: [true, 'Provide a starting date']
   },
+  // TODO: change this to be a date type©
   willBePlayed: {
     type: String,
     trim: true,
@@ -619,17 +623,27 @@ Object.defineProperty(exports, "__esModule", {
 
 var _express = __webpack_require__(1);
 
+var _expressValidation = __webpack_require__(19);
+
+var _expressValidation2 = _interopRequireDefault(_expressValidation);
+
 var _tournament = __webpack_require__(11);
 
 var tournamentController = _interopRequireWildcard(_tournament);
 
 var _auth = __webpack_require__(5);
 
+var _tournament2 = __webpack_require__(31);
+
+var _tournament3 = _interopRequireDefault(_tournament2);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const routes = (0, _express.Router)();
 
-routes.post('/createTournament', _auth.authJwt, tournamentController.createTournament);
+routes.post('/createTournament', _auth.authJwt, (0, _expressValidation2.default)(_tournament3.default.createTournament), tournamentController.createTournament);
 
 exports.default = routes;
 
@@ -837,7 +851,7 @@ const TeamSchema = new _mongoose.Schema({
     type: _mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }
-});
+}, { timeStamp: true });
 
 TeamSchema.statics = {
   createTeam(args, user) {
@@ -862,19 +876,90 @@ Object.defineProperty(exports, "__esModule", {
 
 var _express = __webpack_require__(1);
 
+var _expressValidation = __webpack_require__(19);
+
+var _expressValidation2 = _interopRequireDefault(_expressValidation);
+
 var _team = __webpack_require__(28);
 
 var TeamController = _interopRequireWildcard(_team);
 
 var _auth = __webpack_require__(5);
 
+var _team2 = __webpack_require__(32);
+
+var _team3 = _interopRequireDefault(_team2);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const routes = (0, _express.Router)();
 
-routes.post('/createTeam', _auth.authJwt, TeamController.createTeam);
+routes.post('/createTeam', _auth.authJwt, (0, _expressValidation2.default)(_team3.default.createTeam), TeamController.createTeam);
 
 exports.default = routes;
+
+/***/ }),
+/* 31 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _joi = __webpack_require__(21);
+
+var _joi2 = _interopRequireDefault(_joi);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+  createTournament: {
+    body: {
+      tournamentName: _joi2.default.string().required(),
+      numberOfTeams: _joi2.default.number().integer().positive().required(),
+      minimumNumPlayers: _joi2.default.number().integer().positive().required(),
+      // TODO: change this to be a date type
+      tournamentStarts: _joi2.default.string().required(),
+      willBePlayed: _joi2.default.string().required(),
+      state: _joi2.default.string().required(),
+      address: _joi2.default.string().required(),
+      city: _joi2.default.string().required(),
+      zipCode: _joi2.default.number().integer().positive().required()
+    }
+  }
+};
+
+/***/ }),
+/* 32 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _joi = __webpack_require__(21);
+
+var _joi2 = _interopRequireDefault(_joi);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+  createTeam: {
+    body: {
+      teamName: _joi2.default.string().required(),
+      // TODO: enter items in the array
+      players: _joi2.default.array().required()
+    }
+  }
+};
 
 /***/ })
 /******/ ]);

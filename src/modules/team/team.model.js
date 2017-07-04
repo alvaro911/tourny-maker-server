@@ -25,7 +25,7 @@ const TeamSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User',
   },
-});
+}, { timeStamp: true });
 
 TeamSchema.statics = {
   createTeam(args, user) {

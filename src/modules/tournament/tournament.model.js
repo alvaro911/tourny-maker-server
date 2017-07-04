@@ -6,7 +6,7 @@ const TournamentSchema = new Schema({
     trim: true,
     required: [true, 'Tournament name is required!'],
   },
-  numberOftournaments: {
+  numberOfTeams: {
     type: Number,
     default: 0,
     trim: true,
@@ -17,11 +17,13 @@ const TournamentSchema = new Schema({
     trim: true,
     required: [true, 'A minimum amount of players has to be set'],
   },
+  // TODO: change this to be a date type
   tournamentStarts: {
     type: String,
     trim: true,
     required: [true, 'Provide a starting date'],
   },
+  // TODO: change this to be a date type©
   willBePlayed: {
     type: String,
     trim: true,
