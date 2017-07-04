@@ -10,5 +10,5 @@ With this API the user will be able to:
 -Update information about an existing user (i.e. Name)
 -Delete an account
 -Create a tournament
--Register a team
+-Register a tournament
 -Update tournament stats

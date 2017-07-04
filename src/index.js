@@ -5,7 +5,7 @@ import express from 'express';
 import constants from './config/constants';
 import './config/db';
 import middleWareConfigs from './config/middlewares';
-import apiRoutes from './models';
+import apiRoutes from './modules';
 
 const app = express();
 middleWareConfigs(app);

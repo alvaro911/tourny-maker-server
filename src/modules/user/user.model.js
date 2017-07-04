@@ -10,7 +10,7 @@ const UserSchema = new Schema({
   email: {
     type: String,
     unique: true,
-    required: [true, 'Email is required'],
+    required: ['true', 'Email is required'],
     trim: true,
     validate: {
       validator(email) {
@@ -47,7 +47,7 @@ const UserSchema = new Schema({
       message: '{VALUE} is not a valid password',
     },
   },
-}, { timeStamp: true });
+});
 
 UserSchema.pre('save', function (next) {
   if (this.isModified('password')) {
