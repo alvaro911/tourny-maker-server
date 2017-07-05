@@ -9,7 +9,7 @@ export default {
       password: Joi.string().regex(passwordReg).required(),
       firstName: Joi.string().required(),
       lastName: Joi.string().required(),
-      username: Joi.string().required(),
+      userName: Joi.string().required(),
     },
   },
 };

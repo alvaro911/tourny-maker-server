@@ -14,4 +14,8 @@ routes.post(
   tournamentController.createTournament
 );
 
+routes.get('/tournaments', tournamentController.getTournaments);
+
+routes.get('/tournament/:id', tournamentController.getTournamentById);
+
 export default routes;

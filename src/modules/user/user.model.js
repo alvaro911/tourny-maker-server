@@ -47,6 +47,21 @@ const UserSchema = new Schema({
       message: '{VALUE} is not a valid password',
     },
   },
+  tournaments: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Tournament',
+    },
+  ],
+  team: {
+    type: Schema.Types.ObjectId,
+    ref: 'Team',
+  },
+  role: {
+    type: String,
+    default: 'PLAYER',
+    enum: ['PLAYER', 'CREATOR'],
+  },
 });
 
 UserSchema.pre('save', function (next) {
@@ -71,11 +86,18 @@ UserSchema.methods = {
       constants.JWT_SECRET,
     );
   },
-  toJSON() {
+  toAuthJSON() {
     return {
       _id: this._id,
       userName: this.userName,
       token: `JWT ${this.createToken()}`,
+      email: this.email,
+    };
+  },
+  toJSON() {
+    return {
+      _id: this._id,
+      userName: this.userName,
       email: this.email,
     };
   },

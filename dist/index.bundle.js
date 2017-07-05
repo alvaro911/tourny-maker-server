@@ -192,6 +192,19 @@ const UserSchema = new _mongoose.Schema({
       },
       message: '{VALUE} is not a valid password'
     }
+  },
+  tournaments: [{
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Tournament'
+  }],
+  team: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Team'
+  },
+  role: {
+    type: String,
+    default: 'PLAYER',
+    enum: ['PLAYER', 'CREATOR']
   }
 });
 
@@ -214,11 +227,18 @@ UserSchema.methods = {
       _id: this._id
     }, _constants2.default.JWT_SECRET);
   },
-  toJSON() {
+  toAuthJSON() {
     return {
       _id: this._id,
       userName: this.userName,
       token: `JWT ${this.createToken()}`,
+      email: this.email
+    };
+  },
+  toJSON() {
+    return {
+      _id: this._id,
+      userName: this.userName,
       email: this.email
     };
   }
@@ -253,7 +273,7 @@ exports.default = {
       password: _joi2.default.string().regex(passwordReg).required(),
       firstName: _joi2.default.string().required(),
       lastName: _joi2.default.string().required(),
-      username: _joi2.default.string().required()
+      userName: _joi2.default.string().required()
     }
   }
 };
@@ -268,7 +288,7 @@ exports.default = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.authJwt = exports.authLocal = undefined;
+exports.creatorJwt = exports.authJwt = exports.authLocal = undefined;
 
 var _passport = __webpack_require__(6);
 
@@ -328,11 +348,27 @@ const jwtStrategy = new _passportJwt.Strategy(jwtOptions, async (payload, done) 
   }
 });
 
+const creatorStrategy = new _passportJwt.Strategy(jwtOptions, async (payload, done) => {
+  try {
+    const user = await _user2.default.findById(payload._id);
+
+    if (!user || user.role !== 'CREATOR') {
+      return done(null, false);
+    }
+
+    return done(null, user);
+  } catch (e) {
+    return done(e, false);
+  }
+});
+
 _passport2.default.use(localStg);
 _passport2.default.use(jwtStrategy);
+_passport2.default.use(creatorStrategy);
 
 const authLocal = exports.authLocal = _passport2.default.authenticate('local', { session: false });
 const authJwt = exports.authJwt = _passport2.default.authenticate('jwt', { session: false });
+const creatorJwt = exports.creatorJwt = _passport2.default.authenticate('jwt', { session: false });
 
 /***/ }),
 /* 6 */
@@ -512,19 +548,48 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.createTournament = createTournament;
+exports.getTournaments = getTournaments;
+exports.getTournamentById = getTournamentById;
+
+var _httpStatus = __webpack_require__(33);
+
+var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
 var _tournament = __webpack_require__(12);
 
 var _tournament2 = _interopRequireDefault(_tournament);
 
+var _user = __webpack_require__(3);
+
+var _user2 = _interopRequireDefault(_user);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 async function createTournament(req, res) {
   try {
-    const post = await _tournament2.default.createTournament(req.body, req.user._id);
-    return res.status(201).json(post);
+    const tournament = await _tournament2.default.createTournament(req.body, req.user._id);
+    await _user2.default.findByIdAndUpdate(req.user._id, { $push: { tournaments: tournament } });
+    return res.status(_httpStatus2.default.CREATED).json(tournament);
   } catch (e) {
-    return res.status(400).json(e);
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
+  }
+}
+
+async function getTournaments(req, res) {
+  try {
+    const tournaments = await _tournament2.default.find();
+    return res.status(_httpStatus2.default.OK).json(tournaments);
+  } catch (e) {
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
+  }
+}
+
+async function getTournamentById(req, res) {
+  try {
+    const tournament = await _tournament2.default.findById(req.params.id).populate('user');
+    return res.status(_httpStatus2.default.OK).json(tournament);
+  } catch (e) {
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
 }
 
@@ -645,6 +710,10 @@ const routes = (0, _express.Router)();
 
 routes.post('/createTournament', _auth.authJwt, (0, _expressValidation2.default)(_tournament3.default.createTournament), tournamentController.createTournament);
 
+routes.get('/tournaments', tournamentController.getTournaments);
+
+routes.get('/tournament/:id', tournamentController.getTournamentById);
+
 exports.default = routes;
 
 /***/ }),
@@ -659,6 +728,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.signUp = signUp;
 exports.login = login;
+exports.getUser = getUser;
+
+var _httpStatus = __webpack_require__(33);
+
+var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
 var _user = __webpack_require__(3);
 
@@ -669,14 +743,23 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 async function signUp(req, res) {
   try {
     const user = await _user2.default.create(req.body);
-    return res.status(201).json(user);
+    return res.status(_httpStatus2.default.CREATED).json(user.toAuthJSON());
   } catch (e) {
-    return res.status(500).json(e);
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
 }
 
 function login(req, res) {
-  res.status(200).json(req.user);
+  res.status(_httpStatus2.default.OK).json(req.user);
+}
+
+async function getUser(req, res) {
+  try {
+    const user = await _user2.default.findById(req.user._id);
+    return res.status(_httpStatus2.default.CREATED).json(user.toAuthJSON());
+  } catch (e) {
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
+  }
 }
 
 /***/ }),
@@ -714,6 +797,7 @@ const routes = (0, _express.Router)();
 
 routes.post('/signup', (0, _expressValidation2.default)(_user3.default.signup), userController.signUp);
 routes.post('/login', _auth.authLocal, userController.login);
+routes.get('/me', _auth.creatorJwt, userController.getUser);
 
 exports.default = routes;
 
@@ -796,18 +880,27 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.createTeam = createTeam;
 
+var _httpStatus = __webpack_require__(33);
+
+var _httpStatus2 = _interopRequireDefault(_httpStatus);
+
 var _team = __webpack_require__(29);
 
 var _team2 = _interopRequireDefault(_team);
+
+var _user = __webpack_require__(3);
+
+var _user2 = _interopRequireDefault(_user);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 async function createTeam(req, res) {
   try {
     const team = await _team2.default.createTeam(req.body, req.user._id);
-    return res.status(201).json(team);
+    await _user2.default.findByIdAndUpdate(req.user._id, { team });
+    return res.status(_httpStatus2.default.CREATED).json(team);
   } catch (e) {
-    return res.status(400).json(e);
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
 }
 
@@ -960,6 +1053,135 @@ exports.default = {
     }
   }
 };
+
+/***/ }),
+/* 33 */
+/***/ (function(module, exports) {
+
+// Generated by CoffeeScript 1.10.0
+module.exports = {
+  100: 'Continue',
+  101: 'Switching Protocols',
+  200: 'OK',
+  201: 'Created',
+  202: 'Accepted',
+  203: 'Non-Authoritative Information',
+  204: 'No Content',
+  205: 'Reset Content',
+  206: 'Partial Content',
+  207: 'Multi Status',
+  208: 'Already Reported',
+  226: 'IM Used',
+  300: 'Multiple Choices',
+  301: 'Moved Permanently',
+  302: 'Found',
+  303: 'See Other',
+  304: 'Not Modified',
+  305: 'Use Proxy',
+  306: 'Switch Proxy',
+  307: 'Temporary Redirect',
+  308: 'Permanent Redirect',
+  400: 'Bad Request',
+  401: 'Unauthorized',
+  402: 'Payment Required',
+  403: 'Forbidden',
+  404: 'Not Found',
+  405: 'Method Not Allowed',
+  406: 'Not Acceptable',
+  407: 'Proxy Authentication Required',
+  408: 'Request Time-out',
+  409: 'Conflict',
+  410: 'Gone',
+  411: 'Length Required',
+  412: 'Precondition Failed',
+  413: 'Request Entity Too Large',
+  414: 'Request-URI Too Large',
+  415: 'Unsupported Media Type',
+  416: 'Requested Range not Satisfiable',
+  417: 'Expectation Failed',
+  418: 'I\'m a teapot',
+  421: 'Misdirected Request',
+  422: 'Unprocessable Entity',
+  423: 'Locked',
+  424: 'Failed Dependency',
+  426: 'Upgrade Required',
+  428: 'Precondition Required',
+  429: 'Too Many Requests',
+  431: 'Request Header Fields Too Large',
+  451: 'Unavailable For Legal Reasons',
+  500: 'Internal Server Error',
+  501: 'Not Implemented',
+  502: 'Bad Gateway',
+  503: 'Service Unavailable',
+  504: 'Gateway Time-out',
+  505: 'HTTP Version not Supported',
+  506: 'Variant Also Negotiates',
+  507: 'Insufficient Storage',
+  508: 'Loop Detected',
+  510: 'Not Extended',
+  511: 'Network Authentication Required',
+  CONTINUE: 100,
+  SWITCHING_PROTOCOLS: 101,
+  OK: 200,
+  CREATED: 201,
+  ACCEPTED: 202,
+  NON_AUTHORITATIVE_INFORMATION: 203,
+  NO_CONTENT: 204,
+  RESET_CONTENT: 205,
+  PARTIAL_CONTENT: 206,
+  MULTI_STATUS: 207,
+  ALREADY_REPORTED: 208,
+  IM_USED: 226,
+  MULTIPLE_CHOICES: 300,
+  MOVED_PERMANENTLY: 301,
+  FOUND: 302,
+  SEE_OTHER: 303,
+  NOT_MODIFIED: 304,
+  USE_PROXY: 305,
+  SWITCH_PROXY: 306,
+  TEMPORARY_REDIRECT: 307,
+  PERMANENT_REDIRECT: 308,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  PAYMENT_REQUIRED: 402,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  METHOD_NOT_ALLOWED: 405,
+  NOT_ACCEPTABLE: 406,
+  PROXY_AUTHENTICATION_REQUIRED: 407,
+  REQUEST_TIMEOUT: 408,
+  CONFLICT: 409,
+  GONE: 410,
+  LENGTH_REQUIRED: 411,
+  PRECONDITION_FAILED: 412,
+  REQUEST_ENTITY_TOO_LARGE: 413,
+  REQUEST_URI_TOO_LONG: 414,
+  UNSUPPORTED_MEDIA_TYPE: 415,
+  REQUESTED_RANGE_NOT_SATISFIABLE: 416,
+  EXPECTATION_FAILED: 417,
+  IM_A_TEAPOT: 418,
+  MISDIRECTED_REQUEST: 421,
+  UNPROCESSABLE_ENTITY: 422,
+  UPGRADE_REQUIRED: 426,
+  PRECONDITION_REQUIRED: 428,
+  LOCKED: 423,
+  FAILED_DEPENDENCY: 424,
+  TOO_MANY_REQUESTS: 429,
+  REQUEST_HEADER_FIELDS_TOO_LARGE: 431,
+  UNAVAILABLE_FOR_LEGAL_REASONS: 451,
+  INTERNAL_SERVER_ERROR: 500,
+  NOT_IMPLEMENTED: 501,
+  BAD_GATEWAY: 502,
+  SERVICE_UNAVAILABLE: 503,
+  GATEWAY_TIMEOUT: 504,
+  HTTP_VERSION_NOT_SUPPORTED: 505,
+  VARIANT_ALSO_NEGOTIATES: 506,
+  INSUFFICIENT_STORAGE: 507,
+  LOOP_DETECTED: 508,
+  NOT_EXTENDED: 510,
+  NETWORK_AUTHENTICATION_REQUIRED: 511
+};
+
 
 /***/ })
 /******/ ]);
