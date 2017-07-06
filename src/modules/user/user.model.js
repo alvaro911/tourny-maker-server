@@ -60,9 +60,9 @@ const UserSchema = new Schema({
   role: {
     type: String,
     default: 'PLAYER',
-    enum: ['PLAYER', 'CREATOR'],
+    enum: ['PLAYER', 'CREATOR', 'ADMIN'],
   },
-});
+}, { timeStamps: true });
 
 UserSchema.pre('save', function (next) {
   if (this.isModified('password')) {

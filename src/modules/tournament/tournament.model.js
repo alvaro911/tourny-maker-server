@@ -53,7 +53,13 @@ const TournamentSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User',
   },
-}, { timeStamp: true });
+  teams: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Team',
+    },
+  ],
+}, { timeStamps: true });
 
 TournamentSchema.statics = {
   createTournament(args, user) {

@@ -204,9 +204,9 @@ const UserSchema = new _mongoose.Schema({
   role: {
     type: String,
     default: 'PLAYER',
-    enum: ['PLAYER', 'CREATOR']
+    enum: ['PLAYER', 'CREATOR', 'ADMIN']
   }
-});
+}, { timeStamps: true });
 
 UserSchema.pre('save', function (next) {
   if (this.isModified('password')) {
@@ -662,8 +662,12 @@ const TournamentSchema = new _mongoose.Schema({
   user: {
     type: _mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  }
-}, { timeStamp: true });
+  },
+  teams: [{
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Team'
+  }]
+}, { timeStamps: true });
 
 TournamentSchema.statics = {
   createTournament(args, user) {
@@ -892,12 +896,17 @@ var _user = __webpack_require__(3);
 
 var _user2 = _interopRequireDefault(_user);
 
+var _tournament = __webpack_require__(12);
+
+var _tournament2 = _interopRequireDefault(_tournament);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 async function createTeam(req, res) {
   try {
     const team = await _team2.default.createTeam(req.body, req.user._id);
     await _user2.default.findByIdAndUpdate(req.user._id, { team });
+    await _tournament2.default.findByIdAndUpdate(req.body.tournament, { $push: { teams: team } });
     return res.status(_httpStatus2.default.CREATED).json(team);
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
@@ -943,8 +952,12 @@ const TeamSchema = new _mongoose.Schema({
   user: {
     type: _mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  },
+  tournament: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Tournament'
   }
-}, { timeStamp: true });
+}, { timeStamps: true });
 
 TeamSchema.statics = {
   createTeam(args, user) {
