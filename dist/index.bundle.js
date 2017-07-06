@@ -563,6 +563,8 @@ var _user = __webpack_require__(3);
 
 var _user2 = _interopRequireDefault(_user);
 
+__webpack_require__(29);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 async function createTournament(req, res) {
@@ -586,7 +588,7 @@ async function getTournaments(req, res) {
 
 async function getTournamentById(req, res) {
   try {
-    const tournament = await _tournament2.default.findById(req.params.id).populate('user');
+    const tournament = await _tournament2.default.findById(req.params.id).populate('user').populate('teams');
     return res.status(_httpStatus2.default.OK).json(tournament);
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
@@ -906,8 +908,12 @@ async function createTeam(req, res) {
   try {
     const team = await _team2.default.createTeam(req.body, req.user._id);
     await _user2.default.findByIdAndUpdate(req.user._id, { team });
-    await _tournament2.default.findByIdAndUpdate(req.body.tournament, { $push: { teams: team } });
-    return res.status(_httpStatus2.default.CREATED).json(team);
+    await _tournament2.default.findByIdAndUpdate(req.body.tournament, {
+      $push: {
+        teams: team
+      }
+    });
+    return res.status(_httpStatus2.default.CREATED).json(team.toJSON());
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
@@ -955,9 +961,20 @@ const TeamSchema = new _mongoose.Schema({
   },
   tournament: {
     type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Tournament'
+    ref: 'Tournament',
+    required: true
   }
 }, { timeStamps: true });
+
+TeamSchema.methods = {
+  toJSON() {
+    return {
+      _id: this._id,
+      teamName: this.teamName,
+      players: this.players
+    };
+  }
+};
 
 TeamSchema.statics = {
   createTeam(args, user) {

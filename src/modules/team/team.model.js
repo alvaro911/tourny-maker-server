@@ -28,8 +28,19 @@ const TeamSchema = new Schema({
   tournament: {
     type: Schema.Types.ObjectId,
     ref: 'Tournament',
+    required: true,
   },
 }, { timeStamps: true });
+
+TeamSchema.methods = {
+  toJSON() {
+    return {
+      _id: this._id,
+      teamName: this.teamName,
+      players: this.players,
+    };
+  },
+};
 
 TeamSchema.statics = {
   createTeam(args, user) {
