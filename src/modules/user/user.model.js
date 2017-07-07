@@ -59,7 +59,7 @@ const UserSchema = new Schema({
   },
   role: {
     type: String,
-    default: 'PLAYER',
+    default: 'CREATOR',
     enum: ['PLAYER', 'CREATOR', 'ADMIN'],
   },
 }, { timeStamps: true });

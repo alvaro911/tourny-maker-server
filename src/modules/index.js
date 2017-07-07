@@ -4,6 +4,6 @@ import TeamRoutes from './team/team.route';
 
 export default app => {
   app.use('/api/v1/users', UserRoutes);
-  app.use('/api/v1/tournament', TournamentRoutes);
-  app.use('/api/v1/team', TeamRoutes);
+  app.use('/api/v1/tournaments', TournamentRoutes);
+  app.use('/api/v1/teams', TeamRoutes);
 };

@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import robin from 'roundrobin';
 
 const TournamentSchema = new Schema({
   tournamentName: {
@@ -59,6 +60,11 @@ const TournamentSchema = new Schema({
       ref: 'Team',
     },
   ],
+  matches: [
+    {
+      type: Object,
+    },
+  ],
 }, { timeStamps: true });
 
 TournamentSchema.statics = {
@@ -67,6 +73,15 @@ TournamentSchema.statics = {
       ...args,
       user,
     });
+  },
+};
+
+TournamentSchema.methods = {
+  createCalendar(teams = this.teams, numberOfTeams = this.numberOfTeams) {
+    if (teams.length === numberOfTeams) {
+      console.log('============================== ', typeof (robin(teams.length, teams)));
+      this.matches = robin(teams.length, teams);
+    }
   },
 };
 
