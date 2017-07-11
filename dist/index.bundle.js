@@ -128,7 +128,7 @@ var _mongoose = __webpack_require__(3);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var _validator = __webpack_require__(32);
+var _validator = __webpack_require__(33);
 
 var _validator2 = _interopRequireDefault(_validator);
 
@@ -400,6 +400,14 @@ const TeamSchema = new _mongoose.Schema({
     type: _mongoose.Schema.Types.ObjectId,
     ref: 'Tournament',
     required: true
+  },
+  points: {
+    type: Number,
+    default: 0
+  },
+  gameResult: {
+    type: String,
+    enum: ['WIN', 'DRAW', 'LOSS']
   }
 }, { timeStamps: true });
 
@@ -408,7 +416,9 @@ TeamSchema.methods = {
     return {
       _id: this._id,
       teamName: this.teamName,
-      players: this.players
+      players: this.players,
+      points: this.points,
+      gameResult: this.gameResult
     };
   }
 };
@@ -438,7 +448,7 @@ var _mongoose = __webpack_require__(3);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var _roundrobin = __webpack_require__(33);
+var _roundrobin = __webpack_require__(32);
 
 var _roundrobin2 = _interopRequireDefault(_roundrobin);
 
@@ -502,8 +512,11 @@ const TournamentSchema = new _mongoose.Schema({
     ref: 'Team'
   }],
   matches: [{
+    type: _mongoose.Schema.Types.Mixed
+  }],
+  leaderBoard: {
     type: Object
-  }]
+  }
 }, { timeStamps: true });
 
 TournamentSchema.statics = {
@@ -518,7 +531,7 @@ TournamentSchema.methods = {
   createCalendar(teams = this.teams, numberOfTeams = this.numberOfTeams) {
     if (teams.length === numberOfTeams) {
       console.log('============================== ', typeof (0, _roundrobin2.default)(teams.length, teams));
-      this.matches = (0, _roundrobin2.default)(teams.length, teams);
+      this.set('matches', (0, _roundrobin2.default)(teams.length, teams));
     }
   }
 };
@@ -1117,42 +1130,13 @@ module.exports = require("passport-local");
 /* 32 */
 /***/ (function(module, exports) {
 
-module.exports = require("validator");
+module.exports = require("roundrobin");
 
 /***/ }),
 /* 33 */
 /***/ (function(module, exports) {
 
-const DUMMY = -1;
-// returns an array of round representations (array of player pairs).
-// http://en.wikipedia.org/wiki/Round-robin_tournament#Scheduling_algorithm
-module.exports = function (n, ps) {  // n = num players
-  var rs = [];                  // rs = round array
-  if (!ps) {
-    ps = [];
-    for (var k = 1; k <= n; k += 1) {
-      ps.push(k);
-    }
-  } else {
-    ps = ps.slice();
-  }
-
-  if (n % 2 === 1) {
-    ps.push(DUMMY); // so we can match algorithm for even numbers
-    n += 1;
-  }
-  for (var j = 0; j < n - 1; j += 1) {
-    rs[j] = []; // create inner match array for round j
-    for (var i = 0; i < n / 2; i += 1) {
-      if (ps[i] !== DUMMY && ps[n - 1 - i] !== DUMMY) {
-        rs[j].push([ps[i], ps[n - 1 - i]]); // insert pair as a match
-      }
-    }
-    ps.splice(1, 0, ps.pop()); // permutate for next round
-  }
-  return rs;
-};
-
+module.exports = require("validator");
 
 /***/ })
 /******/ ]);

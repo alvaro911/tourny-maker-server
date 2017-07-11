@@ -30,6 +30,14 @@ const TeamSchema = new Schema({
     ref: 'Tournament',
     required: true,
   },
+  points: {
+    type: Number,
+    default: 0,
+  },
+  gameResult: {
+    type: String,
+    enum: ['WIN', 'DRAW', 'LOSS'],
+  },
 }, { timeStamps: true });
 
 TeamSchema.methods = {
@@ -38,6 +46,8 @@ TeamSchema.methods = {
       _id: this._id,
       teamName: this.teamName,
       players: this.players,
+      points: this.points,
+      gameResult: this.gameResult,
     };
   },
 };

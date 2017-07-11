@@ -62,9 +62,12 @@ const TournamentSchema = new Schema({
   ],
   matches: [
     {
-      type: Object,
+      type: Schema.Types.Mixed,
     },
   ],
+  leaderBoard: {
+    type: Object,
+  },
 }, { timeStamps: true });
 
 TournamentSchema.statics = {
@@ -79,8 +82,7 @@ TournamentSchema.statics = {
 TournamentSchema.methods = {
   createCalendar(teams = this.teams, numberOfTeams = this.numberOfTeams) {
     if (teams.length === numberOfTeams) {
-      console.log('============================== ', typeof (robin(teams.length, teams)));
-      this.matches = robin(teams.length, teams);
+      this.set('matches', robin(teams.length, teams));
     }
   },
 };
