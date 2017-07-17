@@ -1,15 +1,20 @@
 import mongoose, { Schema } from 'mongoose';
 
-const MatchSchema = new Schema ({
+const MatchSchema = new Schema({
+  round: {
+    type: Number,
+  },
   teamA: {
-    id: Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
+    ref: 'Team',
     goals: {
       type: Number,
       default: 0,
     },
   },
   teamB: {
-    id: Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
+    ref: 'Team',
     goals: {
       type: Number,
       default: 0,
@@ -19,4 +24,9 @@ const MatchSchema = new Schema ({
     type: Boolean,
     default: false,
   },
+  matches: {
+    type: Schema.Types.Mixed,
+  },
 });
+
+export default mongoose.model('Matches', MatchSchema);
