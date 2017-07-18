@@ -2,6 +2,7 @@ import HTTPStatus from 'http-status';
 
 import Tournament from './tournament.model';
 import User from '../user/user.model';
+// import Model from '../match/match.model';
 import '../team/team.model';
 
 export async function createTournament(req, res) {
@@ -32,7 +33,7 @@ export async function getTournamentById(req, res) {
   }
 }
 
-export async function getCalendar(req, res) {
+export async function createMatches(req, res) {
   try {
     const calendar = await Tournament.findById(req.params.id);
     calendar.createCalendar();

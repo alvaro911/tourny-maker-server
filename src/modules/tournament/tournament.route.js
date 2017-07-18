@@ -14,7 +14,7 @@ routes.post(
   tournamentController.createTournament
 );
 
-routes.post('/:id', tournamentController.getCalendar);
+routes.post('/:id', tournamentController.createMatches);
 
 routes.get('/', tournamentController.getTournaments);
 

@@ -47,16 +47,6 @@ const UserSchema = new Schema({
       message: '{VALUE} is not a valid password',
     },
   },
-  tournaments: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Tournament',
-    },
-  ],
-  team: {
-    type: Schema.Types.ObjectId,
-    ref: 'Team',
-  },
   role: {
     type: String,
     default: 'CREATOR',

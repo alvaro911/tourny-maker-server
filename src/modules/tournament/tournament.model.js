@@ -1,6 +1,8 @@
 import mongoose, { Schema } from 'mongoose';
 import robin from 'roundrobin';
 
+import MatchModel from '../match/match.model';
+
 const TournamentSchema = new Schema({
   tournamentName: {
     type: String,
@@ -62,12 +64,15 @@ const TournamentSchema = new Schema({
   ],
   matches: [
     {
-      type: Schema.Types.Mixed,
+      type: Schema.Types.ObjectId,
+      ref: 'Match',
     },
   ],
-  leaderBoard: {
-    type: Object,
-  },
+  leaderBoard: [
+    {
+      type: Object,
+    },
+  ],
 }, { timeStamps: true });
 
 TournamentSchema.statics = {
@@ -82,7 +87,12 @@ TournamentSchema.statics = {
 TournamentSchema.methods = {
   createCalendar(teams = this.teams, numberOfTeams = this.numberOfTeams) {
     if (teams.length === numberOfTeams) {
-      this.set('matches', robin(teams.length, teams));
+      robin(teams.length, teams).forEach((round, index) => {
+        const week = index + 1;
+        round.forEach(game => {
+          MatchModel.create({ round: week, teamA: game[0], teamB: game[1] });
+        });
+      });
     }
   },
 };

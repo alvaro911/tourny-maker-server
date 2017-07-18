@@ -10,7 +10,7 @@ const routes = Router();
 routes.post(
   '/createTeam',
   authJwt,
-  validate(teamValidator.createTeam), 
+  validate(teamValidator.createTeam),
   TeamController.createTeam
 );
 

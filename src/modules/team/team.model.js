@@ -21,9 +21,9 @@ const TeamSchema = new Schema({
       },
     },
   ],
-  user: {
+  player: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Player',
   },
   tournament: {
     type: Schema.Types.ObjectId,
@@ -49,6 +49,19 @@ TeamSchema.methods = {
       points: this.points,
       gameResult: this.gameResult,
     };
+  },
+  addPoints() {
+    switch (this.gameResult) {
+      case 'WIN':
+        return 3;
+      case 'DRAW':
+        return 1;
+      default:
+        return 0;
+    }
+  },
+  savePoints() {
+    this.points = this.addPoints();
   },
 };
 

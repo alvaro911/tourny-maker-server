@@ -69,6 +69,12 @@ module.exports =
 /************************************************************************/
 /******/ ([
 /* 0 */
+/***/ (function(module, exports) {
+
+module.exports = require("mongoose");
+
+/***/ }),
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -108,13 +114,13 @@ function envConfig(env) {
 exports.default = Object.assign({}, defaultConfig, envConfig(process.env.NODE_ENV));
 
 /***/ }),
-/* 1 */
+/* 2 */
 /***/ (function(module, exports) {
 
 module.exports = require("express");
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -124,23 +130,23 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _mongoose = __webpack_require__(3);
+var _mongoose = __webpack_require__(0);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var _validator = __webpack_require__(33);
+var _validator = __webpack_require__(34);
 
 var _validator2 = _interopRequireDefault(_validator);
 
-var _bcryptNodejs = __webpack_require__(24);
+var _bcryptNodejs = __webpack_require__(25);
 
-var _jsonwebtoken = __webpack_require__(28);
+var _jsonwebtoken = __webpack_require__(29);
 
 var _jsonwebtoken2 = _interopRequireDefault(_jsonwebtoken);
 
 var _user = __webpack_require__(10);
 
-var _constants = __webpack_require__(0);
+var _constants = __webpack_require__(1);
 
 var _constants2 = _interopRequireDefault(_constants);
 
@@ -241,12 +247,6 @@ UserSchema.methods = {
 exports.default = _mongoose2.default.model('User', UserSchema);
 
 /***/ }),
-/* 3 */
-/***/ (function(module, exports) {
-
-module.exports = require("mongoose");
-
-/***/ }),
 /* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -262,17 +262,17 @@ var _passport = __webpack_require__(11);
 
 var _passport2 = _interopRequireDefault(_passport);
 
-var _passportLocal = __webpack_require__(31);
+var _passportLocal = __webpack_require__(32);
 
 var _passportLocal2 = _interopRequireDefault(_passportLocal);
 
-var _passportJwt = __webpack_require__(30);
+var _passportJwt = __webpack_require__(31);
 
-var _user = __webpack_require__(2);
+var _user = __webpack_require__(3);
 
 var _user2 = _interopRequireDefault(_user);
 
-var _constants = __webpack_require__(0);
+var _constants = __webpack_require__(1);
 
 var _constants2 = _interopRequireDefault(_constants);
 
@@ -367,7 +367,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _mongoose = __webpack_require__(3);
+var _mongoose = __webpack_require__(0);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
@@ -420,6 +420,19 @@ TeamSchema.methods = {
       points: this.points,
       gameResult: this.gameResult
     };
+  },
+  addPoints() {
+    switch (this.gameResult) {
+      case 'WIN':
+        return 3;
+      case 'DRAW':
+        return 1;
+      default:
+        return 0;
+    }
+  },
+  savePoints() {
+    this.points = this.addPoints();
   }
 };
 
@@ -444,13 +457,17 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _mongoose = __webpack_require__(3);
+var _mongoose = __webpack_require__(0);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var _roundrobin = __webpack_require__(32);
+var _roundrobin = __webpack_require__(33);
 
 var _roundrobin2 = _interopRequireDefault(_roundrobin);
+
+var _match = __webpack_require__(16);
+
+var _match2 = _interopRequireDefault(_match);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -512,11 +529,12 @@ const TournamentSchema = new _mongoose.Schema({
     ref: 'Team'
   }],
   matches: [{
-    type: _mongoose.Schema.Types.Mixed
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Match'
   }],
-  leaderBoard: {
+  leaderBoard: [{
     type: Object
-  }
+  }]
 }, { timeStamps: true });
 
 TournamentSchema.statics = {
@@ -530,8 +548,12 @@ TournamentSchema.statics = {
 TournamentSchema.methods = {
   createCalendar(teams = this.teams, numberOfTeams = this.numberOfTeams) {
     if (teams.length === numberOfTeams) {
-      console.log('============================== ', typeof (0, _roundrobin2.default)(teams.length, teams));
-      this.set('matches', (0, _roundrobin2.default)(teams.length, teams));
+      (0, _roundrobin2.default)(teams.length, teams).forEach((round, index) => {
+        const week = index + 1;
+        round.forEach(game => {
+          _match2.default.create({ round: week, teamA: game[0], teamB: game[1] });
+        });
+      });
     }
   }
 };
@@ -583,11 +605,11 @@ module.exports = require("passport");
 "use strict";
 
 
-var _mongoose = __webpack_require__(3);
+var _mongoose = __webpack_require__(0);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var _constants = __webpack_require__(0);
+var _constants = __webpack_require__(1);
 
 var _constants2 = _interopRequireDefault(_constants);
 
@@ -618,19 +640,19 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _morgan = __webpack_require__(29);
+var _morgan = __webpack_require__(30);
 
 var _morgan2 = _interopRequireDefault(_morgan);
 
-var _helmet = __webpack_require__(27);
+var _helmet = __webpack_require__(28);
 
 var _helmet2 = _interopRequireDefault(_helmet);
 
-var _bodyParser = __webpack_require__(25);
+var _bodyParser = __webpack_require__(26);
 
 var _bodyParser2 = _interopRequireDefault(_bodyParser);
 
-var _compression = __webpack_require__(26);
+var _compression = __webpack_require__(27);
 
 var _compression2 = _interopRequireDefault(_compression);
 
@@ -669,15 +691,15 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _user = __webpack_require__(23);
+var _user = __webpack_require__(24);
 
 var _user2 = _interopRequireDefault(_user);
 
-var _tournament = __webpack_require__(20);
+var _tournament = __webpack_require__(21);
 
 var _tournament2 = _interopRequireDefault(_tournament);
 
-var _team = __webpack_require__(17);
+var _team = __webpack_require__(18);
 
 var _team2 = _interopRequireDefault(_team);
 
@@ -696,11 +718,11 @@ exports.default = app => {
 "use strict";
 
 
-var _express = __webpack_require__(1);
+var _express = __webpack_require__(2);
 
 var _express2 = _interopRequireDefault(_express);
 
-var _constants = __webpack_require__(0);
+var _constants = __webpack_require__(1);
 
 var _constants2 = _interopRequireDefault(_constants);
 
@@ -747,6 +769,54 @@ app.listen(_constants2.default.PORT, err => {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _mongoose = __webpack_require__(0);
+
+var _mongoose2 = _interopRequireDefault(_mongoose);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const MatchSchema = new _mongoose.Schema({
+  round: {
+    type: Number
+  },
+  teamA: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Team',
+    goals: {
+      type: Number,
+      default: 0
+    }
+  },
+  teamB: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Team',
+    goals: {
+      type: Number,
+      default: 0
+    }
+  },
+  fullTime: {
+    type: Boolean,
+    default: false
+  },
+  matches: {
+    type: _mongoose.Schema.Types.Mixed
+  }
+});
+
+exports.default = _mongoose2.default.model('Matches', MatchSchema);
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.createTeam = createTeam;
 
 var _httpStatus = __webpack_require__(6);
@@ -757,7 +827,7 @@ var _team = __webpack_require__(8);
 
 var _team2 = _interopRequireDefault(_team);
 
-var _user = __webpack_require__(2);
+var _user = __webpack_require__(3);
 
 var _user2 = _interopRequireDefault(_user);
 
@@ -783,7 +853,7 @@ async function createTeam(req, res) {
 }
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -793,19 +863,19 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _express = __webpack_require__(1);
+var _express = __webpack_require__(2);
 
 var _expressValidation = __webpack_require__(5);
 
 var _expressValidation2 = _interopRequireDefault(_expressValidation);
 
-var _team = __webpack_require__(16);
+var _team = __webpack_require__(17);
 
 var TeamController = _interopRequireWildcard(_team);
 
 var _auth = __webpack_require__(4);
 
-var _team2 = __webpack_require__(18);
+var _team2 = __webpack_require__(19);
 
 var _team3 = _interopRequireDefault(_team2);
 
@@ -820,7 +890,7 @@ routes.post('/createTeam', _auth.authJwt, (0, _expressValidation2.default)(_team
 exports.default = routes;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -847,7 +917,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -859,7 +929,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.createTournament = createTournament;
 exports.getTournaments = getTournaments;
 exports.getTournamentById = getTournamentById;
-exports.getCalendar = getCalendar;
+exports.createMatches = createMatches;
 
 var _httpStatus = __webpack_require__(6);
 
@@ -869,7 +939,7 @@ var _tournament = __webpack_require__(9);
 
 var _tournament2 = _interopRequireDefault(_tournament);
 
-var _user = __webpack_require__(2);
+var _user = __webpack_require__(3);
 
 var _user2 = _interopRequireDefault(_user);
 
@@ -886,7 +956,7 @@ async function createTournament(req, res) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
 }
-
+// import Model from '../match/match.model';
 async function getTournaments(req, res) {
   try {
     const tournaments = await _tournament2.default.find().populate('user').populate('teams', 'teamName');
@@ -905,7 +975,7 @@ async function getTournamentById(req, res) {
   }
 }
 
-async function getCalendar(req, res) {
+async function createMatches(req, res) {
   try {
     const calendar = await _tournament2.default.findById(req.params.id);
     calendar.createCalendar();
@@ -917,7 +987,7 @@ async function getCalendar(req, res) {
 }
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -927,19 +997,19 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _express = __webpack_require__(1);
+var _express = __webpack_require__(2);
 
 var _expressValidation = __webpack_require__(5);
 
 var _expressValidation2 = _interopRequireDefault(_expressValidation);
 
-var _tournament = __webpack_require__(19);
+var _tournament = __webpack_require__(20);
 
 var tournamentController = _interopRequireWildcard(_tournament);
 
 var _auth = __webpack_require__(4);
 
-var _tournament2 = __webpack_require__(21);
+var _tournament2 = __webpack_require__(22);
 
 var _tournament3 = _interopRequireDefault(_tournament2);
 
@@ -951,7 +1021,7 @@ const routes = (0, _express.Router)();
 
 routes.post('/createTournament', _auth.authJwt, (0, _expressValidation2.default)(_tournament3.default.createTournament), tournamentController.createTournament);
 
-routes.post('/:id', tournamentController.getCalendar);
+routes.post('/:id', tournamentController.createMatches);
 
 routes.get('/', tournamentController.getTournaments);
 
@@ -960,7 +1030,7 @@ routes.get('/:id', tournamentController.getTournamentById);
 exports.default = routes;
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -994,7 +1064,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1011,7 +1081,7 @@ var _httpStatus = __webpack_require__(6);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
-var _user = __webpack_require__(2);
+var _user = __webpack_require__(3);
 
 var _user2 = _interopRequireDefault(_user);
 
@@ -1040,7 +1110,7 @@ async function getUser(req, res) {
 }
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1050,7 +1120,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _express = __webpack_require__(1);
+var _express = __webpack_require__(2);
 
 var _expressValidation = __webpack_require__(5);
 
@@ -1058,7 +1128,7 @@ var _expressValidation2 = _interopRequireDefault(_expressValidation);
 
 var _auth = __webpack_require__(4);
 
-var _user = __webpack_require__(22);
+var _user = __webpack_require__(23);
 
 var userController = _interopRequireWildcard(_user);
 
@@ -1079,61 +1149,61 @@ routes.get('/me', _auth.creatorJwt, userController.getUser);
 exports.default = routes;
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports) {
 
 module.exports = require("bcrypt-nodejs");
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports) {
 
 module.exports = require("body-parser");
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports) {
 
 module.exports = require("compression");
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports) {
 
 module.exports = require("helmet");
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports) {
 
 module.exports = require("jsonwebtoken");
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports) {
 
 module.exports = require("morgan");
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports) {
 
 module.exports = require("passport-jwt");
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports) {
 
 module.exports = require("passport-local");
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports) {
 
 module.exports = require("roundrobin");
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports) {
 
 module.exports = require("validator");
