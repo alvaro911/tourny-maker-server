@@ -35,7 +35,7 @@ export async function getTournamentById(req, res) {
 
 export async function createMatches(req, res) {
   try {
-    const calendar = await Tournament.findById(req.params.id);
+    const calendar = await Tournament.findByIdAndUpdate(req.params.id);
     calendar.createCalendar();
     calendar.save();
     return res.status(HTTPStatus.OK).json(calendar);

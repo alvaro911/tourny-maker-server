@@ -29,4 +29,4 @@ const MatchSchema = new Schema({
   },
 });
 
-export default mongoose.model('Matches', MatchSchema);
+export default mongoose.model('Match', MatchSchema);

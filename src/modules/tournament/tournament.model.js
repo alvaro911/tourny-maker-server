@@ -89,8 +89,10 @@ TournamentSchema.methods = {
     if (teams.length === numberOfTeams) {
       robin(teams.length, teams).forEach((round, index) => {
         const week = index + 1;
-        round.forEach(game => {
-          MatchModel.create({ round: week, teamA: game[0], teamB: game[1] });
+        round.forEach(async game => {
+          const match = await MatchModel.create({ round: week, teamA: game[0], teamB: game[1] });
+          this.matches.push(match._id);
+          return await this.save();
         });
       });
     }

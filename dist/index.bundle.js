@@ -64,17 +64,23 @@ module.exports =
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 15);
+/******/ 	return __webpack_require__(__webpack_require__.s = 16);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
 /***/ (function(module, exports) {
 
-module.exports = require("mongoose");
+module.exports = require("express");
 
 /***/ }),
 /* 1 */
+/***/ (function(module, exports) {
+
+module.exports = require("mongoose");
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -114,12 +120,6 @@ function envConfig(env) {
 exports.default = Object.assign({}, defaultConfig, envConfig(process.env.NODE_ENV));
 
 /***/ }),
-/* 2 */
-/***/ (function(module, exports) {
-
-module.exports = require("express");
-
-/***/ }),
 /* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -130,23 +130,23 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _mongoose = __webpack_require__(0);
+var _mongoose = __webpack_require__(1);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var _validator = __webpack_require__(34);
+var _validator = __webpack_require__(36);
 
 var _validator2 = _interopRequireDefault(_validator);
 
-var _bcryptNodejs = __webpack_require__(25);
+var _bcryptNodejs = __webpack_require__(27);
 
-var _jsonwebtoken = __webpack_require__(29);
+var _jsonwebtoken = __webpack_require__(31);
 
 var _jsonwebtoken2 = _interopRequireDefault(_jsonwebtoken);
 
-var _user = __webpack_require__(10);
+var _user = __webpack_require__(11);
 
-var _constants = __webpack_require__(1);
+var _constants = __webpack_require__(2);
 
 var _constants2 = _interopRequireDefault(_constants);
 
@@ -192,14 +192,6 @@ const UserSchema = new _mongoose.Schema({
       },
       message: '{VALUE} is not a valid password'
     }
-  },
-  tournaments: [{
-    type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Tournament'
-  }],
-  team: {
-    type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Team'
   },
   role: {
     type: String,
@@ -248,6 +240,102 @@ exports.default = _mongoose2.default.model('User', UserSchema);
 
 /***/ }),
 /* 4 */
+/***/ (function(module, exports) {
+
+module.exports = require("http-status");
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _mongoose = __webpack_require__(1);
+
+var _mongoose2 = _interopRequireDefault(_mongoose);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const TeamSchema = new _mongoose.Schema({
+  teamName: {
+    type: String,
+    trim: true,
+    unique: true,
+    required: [true, 'Team name is required']
+  },
+  players: [{
+    playerName: {
+      type: String,
+      trim: true,
+      required: [true, 'Need a player name']
+    },
+    playerNumber: {
+      type: Number,
+      trim: true,
+      required: [true, 'Need a player number']
+    }
+  }],
+  player: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Player'
+  },
+  tournament: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Tournament',
+    required: true
+  },
+  points: {
+    type: Number,
+    default: 0
+  },
+  gameResult: {
+    type: String,
+    enum: ['WIN', 'DRAW', 'LOSS']
+  }
+}, { timeStamps: true });
+
+TeamSchema.methods = {
+  toJSON() {
+    return {
+      _id: this._id,
+      teamName: this.teamName,
+      players: this.players,
+      points: this.points,
+      gameResult: this.gameResult
+    };
+  },
+  addPoints() {
+    switch (this.gameResult) {
+      case 'WIN':
+        return 3;
+      case 'DRAW':
+        return 1;
+      default:
+        return 0;
+    }
+  },
+  savePoints() {
+    this.points = this.addPoints();
+  }
+};
+
+TeamSchema.statics = {
+  createTeam(args, user) {
+    return this.create(Object.assign({}, args, {
+      user
+    }));
+  }
+};
+
+exports.default = _mongoose2.default.model('Team', TeamSchema);
+
+/***/ }),
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -258,21 +346,21 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.creatorJwt = exports.authJwt = exports.authLocal = undefined;
 
-var _passport = __webpack_require__(11);
+var _passport = __webpack_require__(12);
 
 var _passport2 = _interopRequireDefault(_passport);
 
-var _passportLocal = __webpack_require__(32);
+var _passportLocal = __webpack_require__(34);
 
 var _passportLocal2 = _interopRequireDefault(_passportLocal);
 
-var _passportJwt = __webpack_require__(31);
+var _passportJwt = __webpack_require__(33);
 
 var _user = __webpack_require__(3);
 
 var _user2 = _interopRequireDefault(_user);
 
-var _constants = __webpack_require__(1);
+var _constants = __webpack_require__(2);
 
 var _constants2 = _interopRequireDefault(_constants);
 
@@ -339,112 +427,16 @@ const authJwt = exports.authJwt = _passport2.default.authenticate('jwt', { sessi
 const creatorJwt = exports.creatorJwt = _passport2.default.authenticate('jwt', { session: false });
 
 /***/ }),
-/* 5 */
+/* 7 */
 /***/ (function(module, exports) {
 
 module.exports = require("express-validation");
 
 /***/ }),
-/* 6 */
-/***/ (function(module, exports) {
-
-module.exports = require("http-status");
-
-/***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports) {
 
 module.exports = require("joi");
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _mongoose = __webpack_require__(0);
-
-var _mongoose2 = _interopRequireDefault(_mongoose);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const TeamSchema = new _mongoose.Schema({
-  teamName: {
-    type: String,
-    trim: true,
-    unique: true,
-    required: [true, 'Team name is required']
-  },
-  players: [{
-    playerName: {
-      type: String,
-      trim: true,
-      required: [true, 'Need a player name']
-    },
-    playerNumber: {
-      type: Number,
-      trim: true,
-      required: [true, 'Need a player number']
-    }
-  }],
-  user: {
-    type: _mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  tournament: {
-    type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Tournament',
-    required: true
-  },
-  points: {
-    type: Number,
-    default: 0
-  },
-  gameResult: {
-    type: String,
-    enum: ['WIN', 'DRAW', 'LOSS']
-  }
-}, { timeStamps: true });
-
-TeamSchema.methods = {
-  toJSON() {
-    return {
-      _id: this._id,
-      teamName: this.teamName,
-      players: this.players,
-      points: this.points,
-      gameResult: this.gameResult
-    };
-  },
-  addPoints() {
-    switch (this.gameResult) {
-      case 'WIN':
-        return 3;
-      case 'DRAW':
-        return 1;
-      default:
-        return 0;
-    }
-  },
-  savePoints() {
-    this.points = this.addPoints();
-  }
-};
-
-TeamSchema.statics = {
-  createTeam(args, user) {
-    return this.create(Object.assign({}, args, {
-      user
-    }));
-  }
-};
-
-exports.default = _mongoose2.default.model('Team', TeamSchema);
 
 /***/ }),
 /* 9 */
@@ -457,15 +449,63 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _mongoose = __webpack_require__(0);
+var _mongoose = __webpack_require__(1);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var _roundrobin = __webpack_require__(33);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const MatchSchema = new _mongoose.Schema({
+  round: {
+    type: Number
+  },
+  teamA: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Team',
+    goals: {
+      type: Number,
+      default: 0
+    }
+  },
+  teamB: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Team',
+    goals: {
+      type: Number,
+      default: 0
+    }
+  },
+  fullTime: {
+    type: Boolean,
+    default: false
+  },
+  matches: {
+    type: _mongoose.Schema.Types.Mixed
+  }
+});
+
+exports.default = _mongoose2.default.model('Match', MatchSchema);
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _mongoose = __webpack_require__(1);
+
+var _mongoose2 = _interopRequireDefault(_mongoose);
+
+var _roundrobin = __webpack_require__(35);
 
 var _roundrobin2 = _interopRequireDefault(_roundrobin);
 
-var _match = __webpack_require__(16);
+var _match = __webpack_require__(9);
 
 var _match2 = _interopRequireDefault(_match);
 
@@ -550,8 +590,10 @@ TournamentSchema.methods = {
     if (teams.length === numberOfTeams) {
       (0, _roundrobin2.default)(teams.length, teams).forEach((round, index) => {
         const week = index + 1;
-        round.forEach(game => {
-          _match2.default.create({ round: week, teamA: game[0], teamB: game[1] });
+        round.forEach(async game => {
+          const match = await _match2.default.create({ round: week, teamA: game[0], teamB: game[1] });
+          this.matches.push(match._id);
+          return await this.save();
         });
       });
     }
@@ -561,7 +603,7 @@ TournamentSchema.methods = {
 exports.default = _mongoose2.default.model('Tournament', TournamentSchema);
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -572,7 +614,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.passwordReg = undefined;
 
-var _joi = __webpack_require__(7);
+var _joi = __webpack_require__(8);
 
 var _joi2 = _interopRequireDefault(_joi);
 
@@ -593,23 +635,23 @@ exports.default = {
 };
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports) {
 
 module.exports = require("passport");
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _mongoose = __webpack_require__(0);
+var _mongoose = __webpack_require__(1);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var _constants = __webpack_require__(1);
+var _constants = __webpack_require__(2);
 
 var _constants2 = _interopRequireDefault(_constants);
 
@@ -630,7 +672,7 @@ _mongoose2.default.connection.once('open', () => console.log('MongoDB running'))
 });
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -640,23 +682,23 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _morgan = __webpack_require__(30);
+var _morgan = __webpack_require__(32);
 
 var _morgan2 = _interopRequireDefault(_morgan);
 
-var _helmet = __webpack_require__(28);
+var _helmet = __webpack_require__(30);
 
 var _helmet2 = _interopRequireDefault(_helmet);
 
-var _bodyParser = __webpack_require__(26);
+var _bodyParser = __webpack_require__(28);
 
 var _bodyParser2 = _interopRequireDefault(_bodyParser);
 
-var _compression = __webpack_require__(27);
+var _compression = __webpack_require__(29);
 
 var _compression2 = _interopRequireDefault(_compression);
 
-var _passport = __webpack_require__(11);
+var _passport = __webpack_require__(12);
 
 var _passport2 = _interopRequireDefault(_passport);
 
@@ -681,7 +723,7 @@ exports.default = app => {
 };
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -691,17 +733,21 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _user = __webpack_require__(24);
+var _user = __webpack_require__(26);
 
 var _user2 = _interopRequireDefault(_user);
 
-var _tournament = __webpack_require__(21);
+var _tournament = __webpack_require__(23);
 
 var _tournament2 = _interopRequireDefault(_tournament);
 
-var _team = __webpack_require__(18);
+var _team = __webpack_require__(20);
 
 var _team2 = _interopRequireDefault(_team);
+
+var _match = __webpack_require__(18);
+
+var _match2 = _interopRequireDefault(_match);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -709,30 +755,31 @@ exports.default = app => {
   app.use('/api/v1/users', _user2.default);
   app.use('/api/v1/tournaments', _tournament2.default);
   app.use('/api/v1/teams', _team2.default);
+  app.use('/api/v1/matches', _match2.default);
 };
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _express = __webpack_require__(2);
+var _express = __webpack_require__(0);
 
 var _express2 = _interopRequireDefault(_express);
 
-var _constants = __webpack_require__(1);
+var _constants = __webpack_require__(2);
 
 var _constants2 = _interopRequireDefault(_constants);
 
-__webpack_require__(12);
+__webpack_require__(13);
 
-var _middlewares = __webpack_require__(13);
+var _middlewares = __webpack_require__(14);
 
 var _middlewares2 = _interopRequireDefault(_middlewares);
 
-var _modules = __webpack_require__(14);
+var _modules = __webpack_require__(15);
 
 var _modules2 = _interopRequireDefault(_modules);
 
@@ -760,7 +807,67 @@ app.listen(_constants2.default.PORT, err => {
 });
 
 /***/ }),
-/* 16 */
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getMatches = getMatches;
+exports.matchById = matchById;
+exports.matchResult = matchResult;
+
+var _httpStatus = __webpack_require__(4);
+
+var _httpStatus2 = _interopRequireDefault(_httpStatus);
+
+var _match = __webpack_require__(9);
+
+var _match2 = _interopRequireDefault(_match);
+
+var _team = __webpack_require__(5);
+
+var _team2 = _interopRequireDefault(_team);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+async function getMatches(req, res) {
+  try {
+    const matches = await _match2.default.find();
+    return res.status(_httpStatus2.default.OK).json(matches);
+  } catch (e) {
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
+  }
+}
+// import TournamentModel from '../tournament/tournament.model';
+// import mongoose from 'mongoose';
+async function matchById(req, res) {
+  try {
+    const matchId = await _match2.default.findById(req.params.id);
+    return res.status(_httpStatus2.default.OK).json(matchId);
+  } catch (e) {
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
+  }
+}
+
+async function matchResult(req, res) {
+  try {
+    const match = await _match2.default.findByIdAndUpdate(req.params.id, {
+      teamA: { goals: req.body.teamAGoals },
+      teamB: { goals: req.body.teamBGoals },
+      fullTime: true
+    });
+    return res.status(_httpStatus2.default.OK).json(match);
+  } catch (e) {
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
+  }
+}
+
+/***/ }),
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -770,45 +877,24 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _mongoose = __webpack_require__(0);
+var _express = __webpack_require__(0);
 
-var _mongoose2 = _interopRequireDefault(_mongoose);
+var _match = __webpack_require__(17);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+var MatchController = _interopRequireWildcard(_match);
 
-const MatchSchema = new _mongoose.Schema({
-  round: {
-    type: Number
-  },
-  teamA: {
-    type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Team',
-    goals: {
-      type: Number,
-      default: 0
-    }
-  },
-  teamB: {
-    type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Team',
-    goals: {
-      type: Number,
-      default: 0
-    }
-  },
-  fullTime: {
-    type: Boolean,
-    default: false
-  },
-  matches: {
-    type: _mongoose.Schema.Types.Mixed
-  }
-});
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-exports.default = _mongoose2.default.model('Matches', MatchSchema);
+const routes = (0, _express.Router)();
+
+routes.get('/', MatchController.getMatches);
+
+routes.get('/:id', MatchController.matchById);
+
+exports.default = routes;
 
 /***/ }),
-/* 17 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -819,11 +905,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.createTeam = createTeam;
 
-var _httpStatus = __webpack_require__(6);
+var _httpStatus = __webpack_require__(4);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
-var _team = __webpack_require__(8);
+var _team = __webpack_require__(5);
 
 var _team2 = _interopRequireDefault(_team);
 
@@ -831,7 +917,7 @@ var _user = __webpack_require__(3);
 
 var _user2 = _interopRequireDefault(_user);
 
-var _tournament = __webpack_require__(9);
+var _tournament = __webpack_require__(10);
 
 var _tournament2 = _interopRequireDefault(_tournament);
 
@@ -853,7 +939,7 @@ async function createTeam(req, res) {
 }
 
 /***/ }),
-/* 18 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -863,19 +949,19 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _express = __webpack_require__(2);
+var _express = __webpack_require__(0);
 
-var _expressValidation = __webpack_require__(5);
+var _expressValidation = __webpack_require__(7);
 
 var _expressValidation2 = _interopRequireDefault(_expressValidation);
 
-var _team = __webpack_require__(17);
+var _team = __webpack_require__(19);
 
 var TeamController = _interopRequireWildcard(_team);
 
-var _auth = __webpack_require__(4);
+var _auth = __webpack_require__(6);
 
-var _team2 = __webpack_require__(19);
+var _team2 = __webpack_require__(21);
 
 var _team3 = _interopRequireDefault(_team2);
 
@@ -890,7 +976,7 @@ routes.post('/createTeam', _auth.authJwt, (0, _expressValidation2.default)(_team
 exports.default = routes;
 
 /***/ }),
-/* 19 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -900,7 +986,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _joi = __webpack_require__(7);
+var _joi = __webpack_require__(8);
 
 var _joi2 = _interopRequireDefault(_joi);
 
@@ -917,7 +1003,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 20 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -931,11 +1017,11 @@ exports.getTournaments = getTournaments;
 exports.getTournamentById = getTournamentById;
 exports.createMatches = createMatches;
 
-var _httpStatus = __webpack_require__(6);
+var _httpStatus = __webpack_require__(4);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
-var _tournament = __webpack_require__(9);
+var _tournament = __webpack_require__(10);
 
 var _tournament2 = _interopRequireDefault(_tournament);
 
@@ -943,7 +1029,7 @@ var _user = __webpack_require__(3);
 
 var _user2 = _interopRequireDefault(_user);
 
-__webpack_require__(8);
+__webpack_require__(5);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -977,7 +1063,7 @@ async function getTournamentById(req, res) {
 
 async function createMatches(req, res) {
   try {
-    const calendar = await _tournament2.default.findById(req.params.id);
+    const calendar = await _tournament2.default.findByIdAndUpdate(req.params.id);
     calendar.createCalendar();
     calendar.save();
     return res.status(_httpStatus2.default.OK).json(calendar);
@@ -987,7 +1073,7 @@ async function createMatches(req, res) {
 }
 
 /***/ }),
-/* 21 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -997,19 +1083,19 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _express = __webpack_require__(2);
+var _express = __webpack_require__(0);
 
-var _expressValidation = __webpack_require__(5);
+var _expressValidation = __webpack_require__(7);
 
 var _expressValidation2 = _interopRequireDefault(_expressValidation);
 
-var _tournament = __webpack_require__(20);
+var _tournament = __webpack_require__(22);
 
 var tournamentController = _interopRequireWildcard(_tournament);
 
-var _auth = __webpack_require__(4);
+var _auth = __webpack_require__(6);
 
-var _tournament2 = __webpack_require__(22);
+var _tournament2 = __webpack_require__(24);
 
 var _tournament3 = _interopRequireDefault(_tournament2);
 
@@ -1030,7 +1116,7 @@ routes.get('/:id', tournamentController.getTournamentById);
 exports.default = routes;
 
 /***/ }),
-/* 22 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1040,7 +1126,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _joi = __webpack_require__(7);
+var _joi = __webpack_require__(8);
 
 var _joi2 = _interopRequireDefault(_joi);
 
@@ -1064,7 +1150,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 23 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1077,7 +1163,7 @@ exports.signUp = signUp;
 exports.login = login;
 exports.getUser = getUser;
 
-var _httpStatus = __webpack_require__(6);
+var _httpStatus = __webpack_require__(4);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
@@ -1110,7 +1196,7 @@ async function getUser(req, res) {
 }
 
 /***/ }),
-/* 24 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1120,19 +1206,19 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _express = __webpack_require__(2);
+var _express = __webpack_require__(0);
 
-var _expressValidation = __webpack_require__(5);
+var _expressValidation = __webpack_require__(7);
 
 var _expressValidation2 = _interopRequireDefault(_expressValidation);
 
-var _auth = __webpack_require__(4);
+var _auth = __webpack_require__(6);
 
-var _user = __webpack_require__(23);
+var _user = __webpack_require__(25);
 
 var userController = _interopRequireWildcard(_user);
 
-var _user2 = __webpack_require__(10);
+var _user2 = __webpack_require__(11);
 
 var _user3 = _interopRequireDefault(_user2);
 
@@ -1149,61 +1235,61 @@ routes.get('/me', _auth.creatorJwt, userController.getUser);
 exports.default = routes;
 
 /***/ }),
-/* 25 */
+/* 27 */
 /***/ (function(module, exports) {
 
 module.exports = require("bcrypt-nodejs");
 
 /***/ }),
-/* 26 */
+/* 28 */
 /***/ (function(module, exports) {
 
 module.exports = require("body-parser");
 
 /***/ }),
-/* 27 */
+/* 29 */
 /***/ (function(module, exports) {
 
 module.exports = require("compression");
 
 /***/ }),
-/* 28 */
+/* 30 */
 /***/ (function(module, exports) {
 
 module.exports = require("helmet");
 
 /***/ }),
-/* 29 */
+/* 31 */
 /***/ (function(module, exports) {
 
 module.exports = require("jsonwebtoken");
 
 /***/ }),
-/* 30 */
+/* 32 */
 /***/ (function(module, exports) {
 
 module.exports = require("morgan");
 
 /***/ }),
-/* 31 */
+/* 33 */
 /***/ (function(module, exports) {
 
 module.exports = require("passport-jwt");
 
 /***/ }),
-/* 32 */
+/* 34 */
 /***/ (function(module, exports) {
 
 module.exports = require("passport-local");
 
 /***/ }),
-/* 33 */
+/* 35 */
 /***/ (function(module, exports) {
 
 module.exports = require("roundrobin");
 
 /***/ }),
-/* 34 */
+/* 36 */
 /***/ (function(module, exports) {
 
 module.exports = require("validator");
