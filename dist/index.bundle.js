@@ -883,12 +883,13 @@ async function matchResult(req, res) {
       fullTime: true
     });
     if (goalsA > goalsB) {
-      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 3 } });
+      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 3 } }, { new: true });
     } else if (goalsA < goalsB) {
-      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 3 } });
+      console.log('teamB won!');
+      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 3 } }, { new: true });
     } else {
-      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 1 } });
-      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 1 } });
+      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 1 } }, { new: true });
+      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 1 } }, { new: true });
     }
     return res.status(_httpStatus2.default.OK).json(match);
   } catch (e) {

@@ -26,12 +26,13 @@ export async function matchResult(req, res) {
       fullTime: true,
     });
     if (goalsA > goalsB) {
-      await TeamModel.findByIdAndUpdate(teamA, { $inc: { points: 3 } });
+      await TeamModel.findByIdAndUpdate(teamA, { $inc: { points: 3 } }, { new: true });
     } else if (goalsA < goalsB) {
-      await TeamModel.findByIdAndUpdate(teamB, { $inc: { points: 3 } });
+      console.log('teamB won!');
+      await TeamModel.findByIdAndUpdate(teamB, { $inc: { points: 3 } }, { new: true });
     } else {
-      await TeamModel.findByIdAndUpdate(teamA, { $inc: { points: 1 } });
-      await TeamModel.findByIdAndUpdate(teamB, { $inc: { points: 1 } });
+      await TeamModel.findByIdAndUpdate(teamA, { $inc: { points: 1 } }, { new: true });
+      await TeamModel.findByIdAndUpdate(teamB, { $inc: { points: 1 } }, { new: true });
     }
     return res.status(HTTPStatus.OK).json(match);
   } catch (e) {
