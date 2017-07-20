@@ -6,6 +6,6 @@ const routes = Router();
 
 routes.get('/:id', MatchController.matchById);
 
-routes.post('/:id', MatchController.matchResult);
+routes.patch('/:id', MatchController.matchResult);
 
 export default routes;

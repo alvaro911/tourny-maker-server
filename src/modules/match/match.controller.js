@@ -20,7 +20,6 @@ export async function matchResult(req, res) {
     const teamB = req.body.teamB;
     const goalsA = req.body.goalsA;
     const goalsB = req.body.goalsB;
-    console.log(`team A ${teamA}`);
     const match = await MatchModel.findByIdAndUpdate(req.params.id, {
       goalsA,
       goalsB,
