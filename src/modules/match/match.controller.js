@@ -16,23 +16,19 @@ export async function matchById(req, res) {
 
 export async function matchResult(req, res) {
   try {
-    const teamA = req.body.teamA;
-    const teamB = req.body.teamB;
-    const goalsA = req.body.goalsA;
-    const goalsB = req.body.goalsB;
+    const { teamA, teamB, goalsA, goalsB } = req.body;
     const match = await MatchModel.findByIdAndUpdate(req.params.id, {
       goalsA,
       goalsB,
       fullTime: true,
     });
     if (goalsA > goalsB) {
-      await TeamModel.findByIdAndUpdate(teamA, { $inc: { points: 3 } }, { new: true });
+      await TeamModel.findByIdAndUpdate(teamA, { $inc: { points: 3, totalGoals: goalsA } }, { new: true });
     } else if (goalsA < goalsB) {
-      console.log('teamB won!');
-      await TeamModel.findByIdAndUpdate(teamB, { $inc: { points: 3 } }, { new: true });
+      await TeamModel.findByIdAndUpdate(teamB, { $inc: { points: 3, totalGoals: goalsB } }, { new: true });
     } else {
-      await TeamModel.findByIdAndUpdate(teamA, { $inc: { points: 1 } }, { new: true });
-      await TeamModel.findByIdAndUpdate(teamB, { $inc: { points: 1 } }, { new: true });
+      await TeamModel.findByIdAndUpdate(teamA, { $inc: { points: 1, totalGoals: goalsA } }, { new: true });
+      await TeamModel.findByIdAndUpdate(teamB, { $inc: { points: 1, totalGoals: goalsB } }, { new: true });
     }
     return res.status(HTTPStatus.OK).json(match);
   } catch (e) {

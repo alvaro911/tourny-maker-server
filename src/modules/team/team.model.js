@@ -34,9 +34,9 @@ const TeamSchema = new Schema({
     type: Number,
     default: 0,
   },
-  gameResult: {
-    type: String,
-    enum: ['WIN', 'DRAW', 'LOSS'],
+  totalGoals: {
+    type: Number,
+    default: 0,
   },
 }, { timeStamps: true });
 

@@ -26,7 +26,7 @@ export async function getTournaments(req, res) {
 
 export async function getTournamentById(req, res) {
   try {
-    const tournament = await Tournament.findById(req.params.id).populate('user').populate('teams');
+    const tournament = await Tournament.findById(req.params.id).populate('user').populate('teams').populate('leaderBoard');
     const matches = await MatchModel.find({ tournament_id: req.params.id });
     return res.status(HTTPStatus.OK).json({
       ...tournament.toJSON(),

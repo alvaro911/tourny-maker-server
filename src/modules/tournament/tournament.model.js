@@ -70,7 +70,8 @@ const TournamentSchema = new Schema({
   ],
   leaderBoard: [
     {
-      type: Object,
+      type: Schema.Types.ObjectId,
+      ref: 'Team',
     },
   ],
 }, { timeStamps: true });

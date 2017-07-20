@@ -7,6 +7,8 @@ import teamValidator from './team.validator';
 
 const routes = Router();
 
+routes.get('/:id', TeamController.getTeamById);
+
 routes.post(
   '/createTeam',
   authJwt,

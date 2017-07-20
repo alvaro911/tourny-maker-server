@@ -358,9 +358,9 @@ const TeamSchema = new _mongoose.Schema({
     type: Number,
     default: 0
   },
-  gameResult: {
-    type: String,
-    enum: ['WIN', 'DRAW', 'LOSS']
+  totalGoals: {
+    type: Number,
+    default: 0
   }
 }, { timeStamps: true });
 
@@ -590,7 +590,8 @@ const TournamentSchema = new _mongoose.Schema({
     ref: 'Match'
   }],
   leaderBoard: [{
-    type: Object
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Team'
   }]
 }, { timeStamps: true });
 
@@ -873,23 +874,19 @@ async function matchById(req, res) {
 // import mongoose from 'mongoose';
 async function matchResult(req, res) {
   try {
-    const teamA = req.body.teamA;
-    const teamB = req.body.teamB;
-    const goalsA = req.body.goalsA;
-    const goalsB = req.body.goalsB;
+    const { teamA, teamB, goalsA, goalsB } = req.body;
     const match = await _match2.default.findByIdAndUpdate(req.params.id, {
       goalsA,
       goalsB,
       fullTime: true
     });
     if (goalsA > goalsB) {
-      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 3 } }, { new: true });
+      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 3, totalGoals: goalsA } }, { new: true });
     } else if (goalsA < goalsB) {
-      console.log('teamB won!');
-      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 3 } }, { new: true });
+      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 3, totalGoals: goalsB } }, { new: true });
     } else {
-      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 1 } }, { new: true });
-      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 1 } }, { new: true });
+      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 1, totalGoals: goalsA } }, { new: true });
+      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 1, totalGoals: goalsB } }, { new: true });
     }
     return res.status(_httpStatus2.default.OK).json(match);
   } catch (e) {
@@ -934,6 +931,7 @@ exports.default = routes;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.getTeamById = getTeamById;
 exports.createTeam = createTeam;
 
 var _httpStatus = __webpack_require__(4);
@@ -954,13 +952,23 @@ var _tournament2 = _interopRequireDefault(_tournament);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+async function getTeamById(req, res) {
+  try {
+    const teamId = await _team2.default.findById(req.params.id);
+    return res.status(_httpStatus2.default.OK).json(teamId);
+  } catch (e) {
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
+  }
+}
+
 async function createTeam(req, res) {
   try {
     const team = await _team2.default.createTeam(req.body, req.user._id);
     await _user2.default.findByIdAndUpdate(req.user._id, { team });
     await _tournament2.default.findByIdAndUpdate(req.body.tournament, {
       $push: {
-        teams: team
+        teams: team,
+        leaderBoard: team
       }
     });
     return res.status(_httpStatus2.default.CREATED).json(team.toJSON());
@@ -1001,6 +1009,8 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const routes = (0, _express.Router)();
+
+routes.get('/:id', TeamController.getTeamById);
 
 routes.post('/createTeam', _auth.authJwt, (0, _expressValidation2.default)(_team3.default.createTeam), TeamController.createTeam);
 
@@ -1089,7 +1099,7 @@ async function getTournaments(req, res) {
 
 async function getTournamentById(req, res) {
   try {
-    const tournament = await _tournament2.default.findById(req.params.id).populate('user').populate('teams');
+    const tournament = await _tournament2.default.findById(req.params.id).populate('user').populate('teams').populate('leaderBoard');
     const matches = await _match2.default.find({ tournament_id: req.params.id });
     return res.status(_httpStatus2.default.OK).json(Object.assign({}, tournament.toJSON(), {
       matches
