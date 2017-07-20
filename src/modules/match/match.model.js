@@ -7,18 +7,18 @@ const MatchSchema = new Schema({
   teamA: {
     type: Schema.Types.ObjectId,
     ref: 'Team',
-    goals: {
-      type: Number,
-      default: 0,
-    },
+  },
+  goalsA: {
+    type: Number,
+    default: 0,
   },
   teamB: {
     type: Schema.Types.ObjectId,
     ref: 'Team',
-    goals: {
-      type: Number,
-      default: 0,
-    },
+  },
+  goalsB: {
+    type: Number,
+    default: 0,
   },
   fullTime: {
     type: Boolean,
@@ -27,6 +27,23 @@ const MatchSchema = new Schema({
   matches: {
     type: Schema.Types.Mixed,
   },
+  tournament_id: {
+    type: Schema.Types.ObjectId,
+    ref: 'Tournament',
+  },
 });
+
+MatchSchema.methods = {
+  toJSON() {
+    return {
+      _id: this._id,
+      teamA: this.teamA,
+      goalsA: this.goalsA,
+      teamB: this.teamB,
+      goalsB: this.goalsB,
+      tournament_id: this.tournament_id,
+    };
+  },
+};
 
 export default mongoose.model('Match', MatchSchema);

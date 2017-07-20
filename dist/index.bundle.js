@@ -461,19 +461,19 @@ const MatchSchema = new _mongoose.Schema({
   },
   teamA: {
     type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Team',
-    goals: {
-      type: Number,
-      default: 0
-    }
+    ref: 'Team'
+  },
+  goalsA: {
+    type: Number,
+    default: 0
   },
   teamB: {
     type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Team',
-    goals: {
-      type: Number,
-      default: 0
-    }
+    ref: 'Team'
+  },
+  goalsB: {
+    type: Number,
+    default: 0
   },
   fullTime: {
     type: Boolean,
@@ -481,8 +481,25 @@ const MatchSchema = new _mongoose.Schema({
   },
   matches: {
     type: _mongoose.Schema.Types.Mixed
+  },
+  tournament_id: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Tournament'
   }
 });
+
+MatchSchema.methods = {
+  toJSON() {
+    return {
+      _id: this._id,
+      teamA: this.teamA,
+      goalsA: this.goalsA,
+      teamB: this.teamB,
+      goalsB: this.goalsB,
+      tournament_id: this.tournament_id
+    };
+  }
+};
 
 exports.default = _mongoose2.default.model('Match', MatchSchema);
 
@@ -585,17 +602,28 @@ TournamentSchema.statics = {
   }
 };
 
+async function createMatch(week, game, tournamentId) {
+  return await _match2.default.create({
+    round: week,
+    teamA: game[0],
+    teamB: game[1],
+    tournamentId
+  });
+}
+
 TournamentSchema.methods = {
-  createCalendar(teams = this.teams, numberOfTeams = this.numberOfTeams) {
+  async createCalendar(teams = this.teams, numberOfTeams = this.numberOfTeams) {
     if (teams.length === numberOfTeams) {
-      (0, _roundrobin2.default)(teams.length, teams).forEach((round, index) => {
-        const week = index + 1;
-        round.forEach(async game => {
-          const match = await _match2.default.create({ round: week, teamA: game[0], teamB: game[1] });
-          this.matches.push(match._id);
-          return await this.save();
-        });
+      (0, _roundrobin2.default)(teams.length, teams).forEach((round, i) => {
+        const week = i + 1;
+
+        round.forEach(async game => await createMatch(week, game, this._id));
       });
+
+      const matches = await _match2.default.find({ tournament_id: this._id });
+
+      this.matches.push(matches);
+      return await this.save();
     }
   }
 };
@@ -816,7 +844,6 @@ app.listen(_constants2.default.PORT, err => {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getMatches = getMatches;
 exports.matchById = matchById;
 exports.matchResult = matchResult;
 
@@ -834,16 +861,6 @@ var _team2 = _interopRequireDefault(_team);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-async function getMatches(req, res) {
-  try {
-    const matches = await _match2.default.find();
-    return res.status(_httpStatus2.default.OK).json(matches);
-  } catch (e) {
-    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
-  }
-}
-// import TournamentModel from '../tournament/tournament.model';
-// import mongoose from 'mongoose';
 async function matchById(req, res) {
   try {
     const matchId = await _match2.default.findById(req.params.id);
@@ -852,14 +869,28 @@ async function matchById(req, res) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
 }
-
+// import TournamentModel from '../tournament/tournament.model';
+// import mongoose from 'mongoose';
 async function matchResult(req, res) {
   try {
+    const teamA = req.body.teamA;
+    const teamB = req.body.teamB;
+    const goalsA = req.body.goalsA;
+    const goalsB = req.body.goalsB;
+    console.log(`team A ${teamA}`);
     const match = await _match2.default.findByIdAndUpdate(req.params.id, {
-      teamA: { goals: req.body.teamAGoals },
-      teamB: { goals: req.body.teamBGoals },
+      goalsA,
+      goalsB,
       fullTime: true
     });
+    if (goalsA > goalsB) {
+      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 3 } });
+    } else if (goalsA < goalsB) {
+      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 3 } });
+    } else {
+      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 1 } });
+      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 1 } });
+    }
     return res.status(_httpStatus2.default.OK).json(match);
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
@@ -887,9 +918,9 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 const routes = (0, _express.Router)();
 
-routes.get('/', MatchController.getMatches);
-
 routes.get('/:id', MatchController.matchById);
+
+routes.post('/:id', MatchController.matchResult);
 
 exports.default = routes;
 
@@ -1029,6 +1060,10 @@ var _user = __webpack_require__(3);
 
 var _user2 = _interopRequireDefault(_user);
 
+var _match = __webpack_require__(9);
+
+var _match2 = _interopRequireDefault(_match);
+
 __webpack_require__(5);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -1042,7 +1077,7 @@ async function createTournament(req, res) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
 }
-// import Model from '../match/match.model';
+
 async function getTournaments(req, res) {
   try {
     const tournaments = await _tournament2.default.find().populate('user').populate('teams', 'teamName');
@@ -1055,7 +1090,10 @@ async function getTournaments(req, res) {
 async function getTournamentById(req, res) {
   try {
     const tournament = await _tournament2.default.findById(req.params.id).populate('user').populate('teams');
-    return res.status(_httpStatus2.default.OK).json(tournament);
+    const matches = await _match2.default.find({ tournament_id: req.params.id });
+    return res.status(_httpStatus2.default.OK).json(Object.assign({}, tournament.toJSON(), {
+      matches
+    }));
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }

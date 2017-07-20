@@ -84,17 +84,28 @@ TournamentSchema.statics = {
   },
 };
 
+async function createMatch(week, game, tournamentId) {
+  return await MatchModel.create({
+    round: week,
+    teamA: game[0],
+    teamB: game[1],
+    tournamentId,
+  });
+}
+
 TournamentSchema.methods = {
-  createCalendar(teams = this.teams, numberOfTeams = this.numberOfTeams) {
+  async createCalendar(teams = this.teams, numberOfTeams = this.numberOfTeams) {
     if (teams.length === numberOfTeams) {
-      robin(teams.length, teams).forEach((round, index) => {
-        const week = index + 1;
-        round.forEach(async game => {
-          const match = await MatchModel.create({ round: week, teamA: game[0], teamB: game[1] });
-          this.matches.push(match._id);
-          return await this.save();
-        });
+      robin(teams.length, teams).forEach((round, i) => {
+        const week = i + 1;
+
+        round.forEach(async game => await createMatch(week, game, this._id));
       });
+
+      const matches = await MatchModel.find({ tournament_id: this._id });
+
+      this.matches.push(matches);
+      return await this.save();
     }
   },
 };

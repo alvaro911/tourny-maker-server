@@ -5,15 +5,6 @@ import MatchModel from './match.model';
 // import TournamentModel from '../tournament/tournament.model';
 import TeamModel from '../team/team.model';
 
-export async function getMatches(req, res) {
-  try {
-    const matches = await MatchModel.find();
-    return res.status(HTTPStatus.OK).json(matches);
-  } catch (e) {
-    return res.status(HTTPStatus.BAD_REQUEST).json(e);
-  }
-}
-
 export async function matchById(req, res) {
   try {
     const matchId = await MatchModel.findById(req.params.id);
@@ -25,11 +16,24 @@ export async function matchById(req, res) {
 
 export async function matchResult(req, res) {
   try {
+    const teamA = req.body.teamA;
+    const teamB = req.body.teamB;
+    const goalsA = req.body.goalsA;
+    const goalsB = req.body.goalsB;
+    console.log(`team A ${teamA}`);
     const match = await MatchModel.findByIdAndUpdate(req.params.id, {
-      teamA: { goals: req.body.teamAGoals },
-      teamB: { goals: req.body.teamBGoals },
+      goalsA,
+      goalsB,
       fullTime: true,
     });
+    if (goalsA > goalsB) {
+      await TeamModel.findByIdAndUpdate(teamA, { $inc: { points: 3 } });
+    } else if (goalsA < goalsB) {
+      await TeamModel.findByIdAndUpdate(teamB, { $inc: { points: 3 } });
+    } else {
+      await TeamModel.findByIdAndUpdate(teamA, { $inc: { points: 1 } });
+      await TeamModel.findByIdAndUpdate(teamB, { $inc: { points: 1 } });
+    }
     return res.status(HTTPStatus.OK).json(match);
   } catch (e) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);
