@@ -134,13 +134,13 @@ var _mongoose = __webpack_require__(1);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var _validator = __webpack_require__(36);
+var _validator = __webpack_require__(37);
 
 var _validator2 = _interopRequireDefault(_validator);
 
 var _bcryptNodejs = __webpack_require__(27);
 
-var _jsonwebtoken = __webpack_require__(31);
+var _jsonwebtoken = __webpack_require__(32);
 
 var _jsonwebtoken2 = _interopRequireDefault(_jsonwebtoken);
 
@@ -288,7 +288,7 @@ const MatchSchema = new _mongoose.Schema({
   matches: {
     type: _mongoose.Schema.Types.Mixed
   },
-  tournament_id: {
+  tournamentId: {
     type: _mongoose.Schema.Types.ObjectId,
     ref: 'Tournament'
   }
@@ -361,6 +361,10 @@ const TeamSchema = new _mongoose.Schema({
   totalGoals: {
     type: Number,
     default: 0
+  },
+  position: {
+    type: Number,
+    default: 1
   }
 }, { timeStamps: true });
 
@@ -415,11 +419,11 @@ var _passport = __webpack_require__(12);
 
 var _passport2 = _interopRequireDefault(_passport);
 
-var _passportLocal = __webpack_require__(34);
+var _passportLocal = __webpack_require__(35);
 
 var _passportLocal2 = _interopRequireDefault(_passportLocal);
 
-var _passportJwt = __webpack_require__(33);
+var _passportJwt = __webpack_require__(34);
 
 var _user = __webpack_require__(3);
 
@@ -518,7 +522,7 @@ var _mongoose = __webpack_require__(1);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var _roundrobin = __webpack_require__(35);
+var _roundrobin = __webpack_require__(36);
 
 var _roundrobin2 = _interopRequireDefault(_roundrobin);
 
@@ -711,11 +715,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _morgan = __webpack_require__(32);
+var _morgan = __webpack_require__(33);
 
 var _morgan2 = _interopRequireDefault(_morgan);
 
-var _helmet = __webpack_require__(30);
+var _helmet = __webpack_require__(31);
 
 var _helmet2 = _interopRequireDefault(_helmet);
 
@@ -731,6 +735,10 @@ var _passport = __webpack_require__(12);
 
 var _passport2 = _interopRequireDefault(_passport);
 
+var _cors = __webpack_require__(30);
+
+var _cors2 = _interopRequireDefault(_cors);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -742,6 +750,7 @@ exports.default = app => {
     app.use((0, _helmet2.default)());
   }
 
+  app.use((0, _cors2.default)('*'));
   app.use(_bodyParser2.default.json());
   app.use(_bodyParser2.default.urlencoded({ extended: true }));
   app.use(_passport2.default.initialize());
@@ -879,7 +888,7 @@ async function matchResult(req, res) {
       goalsA,
       goalsB,
       fullTime: true
-    });
+    }, { new: true });
     if (goalsA > goalsB) {
       await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 3, totalGoals: goalsA } }, { new: true });
     } else if (goalsA < goalsB) {
@@ -1230,8 +1239,10 @@ async function signUp(req, res) {
   }
 }
 
-function login(req, res) {
-  res.status(_httpStatus2.default.OK).json(req.user);
+function login(req, res, next) {
+  res.status(_httpStatus2.default.OK).json(req.user.toAuthJSON());
+
+  return next();
 }
 
 async function getUser(req, res) {
@@ -1304,40 +1315,46 @@ module.exports = require("compression");
 /* 30 */
 /***/ (function(module, exports) {
 
-module.exports = require("helmet");
+module.exports = require("cors");
 
 /***/ }),
 /* 31 */
 /***/ (function(module, exports) {
 
-module.exports = require("jsonwebtoken");
+module.exports = require("helmet");
 
 /***/ }),
 /* 32 */
 /***/ (function(module, exports) {
 
-module.exports = require("morgan");
+module.exports = require("jsonwebtoken");
 
 /***/ }),
 /* 33 */
 /***/ (function(module, exports) {
 
-module.exports = require("passport-jwt");
+module.exports = require("morgan");
 
 /***/ }),
 /* 34 */
 /***/ (function(module, exports) {
 
-module.exports = require("passport-local");
+module.exports = require("passport-jwt");
 
 /***/ }),
 /* 35 */
 /***/ (function(module, exports) {
 
-module.exports = require("roundrobin");
+module.exports = require("passport-local");
 
 /***/ }),
 /* 36 */
+/***/ (function(module, exports) {
+
+module.exports = require("roundrobin");
+
+/***/ }),
+/* 37 */
 /***/ (function(module, exports) {
 
 module.exports = require("validator");

@@ -21,7 +21,7 @@ export async function matchResult(req, res) {
       goalsA,
       goalsB,
       fullTime: true,
-    });
+    }, { new: true });
     if (goalsA > goalsB) {
       await TeamModel.findByIdAndUpdate(teamA, { $inc: { points: 3, totalGoals: goalsA } }, { new: true });
     } else if (goalsA < goalsB) {

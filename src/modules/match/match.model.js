@@ -27,7 +27,7 @@ const MatchSchema = new Schema({
   matches: {
     type: Schema.Types.Mixed,
   },
-  tournament_id: {
+  tournamentId: {
     type: Schema.Types.ObjectId,
     ref: 'Tournament',
   },

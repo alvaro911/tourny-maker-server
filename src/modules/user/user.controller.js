@@ -11,8 +11,10 @@ export async function signUp(req, res) {
   }
 }
 
-export function login(req, res) {
-  res.status(HTTPStatus.OK).json(req.user);
+export function login(req, res, next) {
+  res.status(HTTPStatus.OK).json(req.user.toAuthJSON());
+
+  return next();
 }
 
 export async function getUser(req, res) {

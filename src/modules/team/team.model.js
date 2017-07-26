@@ -38,6 +38,10 @@ const TeamSchema = new Schema({
     type: Number,
     default: 0,
   },
+  position: {
+    type: Number,
+    default: 1,
+  },
 }, { timeStamps: true });
 
 TeamSchema.methods = {
