@@ -1162,13 +1162,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const routes = (0, _express.Router)();
 
-routes.post('/createTournament', _auth.authJwt, (0, _expressValidation2.default)(_tournament3.default.createTournament), tournamentController.createTournament);
+routes.post('/createTournament', _auth.creatorJwt, (0, _expressValidation2.default)(_tournament3.default.createTournament), tournamentController.createTournament);
 
-routes.post('/:id', tournamentController.createMatches);
+routes.post('/:id', _auth.creatorJwt, tournamentController.createMatches);
 
-routes.get('/', tournamentController.getTournaments);
+routes.get('/', _auth.authJwt, tournamentController.getTournaments);
 
-routes.get('/:id', tournamentController.getTournamentById);
+routes.get('/:id', _auth.authJwt, tournamentController.getTournamentById);
 
 exports.default = routes;
 
@@ -1219,6 +1219,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.signUp = signUp;
 exports.login = login;
 exports.getUser = getUser;
+exports.updateUser = updateUser;
 
 var _httpStatus = __webpack_require__(4);
 
@@ -1241,7 +1242,6 @@ async function signUp(req, res) {
 
 function login(req, res, next) {
   res.status(_httpStatus2.default.OK).json(req.user.toAuthJSON());
-
   return next();
 }
 
@@ -1249,6 +1249,18 @@ async function getUser(req, res) {
   try {
     const user = await _user2.default.findById(req.user._id);
     return res.status(_httpStatus2.default.CREATED).json(user.toAuthJSON());
+  } catch (e) {
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
+  }
+}
+
+async function updateUser(req, res) {
+  try {
+    const userUpdate = await _user2.default.findById(req.user._id);
+    Object.keys(req.body).forEach(key => {
+      userUpdate[key] = req.body[key];
+    });
+    return res.status(_httpStatus2.default.OK).json((await userUpdate.save()));
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
@@ -1289,7 +1301,8 @@ const routes = (0, _express.Router)();
 
 routes.post('/signup', (0, _expressValidation2.default)(_user3.default.signup), userController.signUp);
 routes.post('/login', _auth.authLocal, userController.login);
-routes.get('/me', _auth.creatorJwt, userController.getUser);
+routes.get('/me', _auth.authJwt, userController.getUser);
+routes.patch('/me', _auth.authJwt, userController.updateUser);
 
 exports.default = routes;
 
