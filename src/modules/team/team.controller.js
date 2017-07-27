@@ -15,19 +15,23 @@ export async function getTeamById(req, res) {
 
 export async function createTeam(req, res) {
   try {
-    const team = await Team.createTeam(req.body, req.user._id);
+    const team = await Team.createTeam(
+      req.body,
+      req.user._id,
+    );
     await User.findByIdAndUpdate(req.user._id, { team });
     await Tournament.findByIdAndUpdate(
       req.body.tournament,
       {
-        $push:
-        {
+        $push: {
           teams: team,
           leaderBoard: team,
         },
-      }
+      },
     );
-    return res.status(HTTPStatus.CREATED).json(team.toJSON());
+    return res
+      .status(HTTPStatus.CREATED)
+      .json(team.toJSON());
   } catch (e) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);
   }

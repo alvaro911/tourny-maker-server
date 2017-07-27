@@ -491,9 +491,15 @@ _passport2.default.use(localStg);
 _passport2.default.use(jwtStrategy);
 _passport2.default.use(creatorStrategy);
 
-const authLocal = exports.authLocal = _passport2.default.authenticate('local', { session: false });
-const authJwt = exports.authJwt = _passport2.default.authenticate('jwt', { session: false });
-const creatorJwt = exports.creatorJwt = _passport2.default.authenticate('jwt', { session: false });
+const authLocal = exports.authLocal = _passport2.default.authenticate('local', {
+  session: false
+});
+const authJwt = exports.authJwt = _passport2.default.authenticate('jwt', {
+  session: false
+});
+const creatorJwt = exports.creatorJwt = _passport2.default.authenticate('jwt', {
+  session: false
+});
 
 /***/ }),
 /* 8 */
@@ -625,7 +631,9 @@ TournamentSchema.methods = {
         round.forEach(async game => await createMatch(week, game, this._id));
       });
 
-      const matches = await _match2.default.find({ tournament_id: this._id });
+      const matches = await _match2.default.find({
+        tournament_id: this._id
+      });
 
       this.matches.push(matches);
       return await this.save();
@@ -1090,7 +1098,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 async function createTournament(req, res) {
   try {
     const tournament = await _tournament2.default.createTournament(req.body, req.user._id);
-    await _user2.default.findByIdAndUpdate(req.user._id, { $push: { tournaments: tournament } });
+    await _user2.default.findByIdAndUpdate(req.user._id, {
+      $push: { tournaments: tournament }
+    });
     return res.status(_httpStatus2.default.CREATED).json(tournament);
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
@@ -1109,7 +1119,9 @@ async function getTournaments(req, res) {
 async function getTournamentById(req, res) {
   try {
     const tournament = await _tournament2.default.findById(req.params.id).populate('user').populate('teams').populate('leaderBoard');
-    const matches = await _match2.default.find({ tournament_id: req.params.id });
+    const matches = await _match2.default.find({
+      tournament_id: req.params.id
+    });
     return res.status(_httpStatus2.default.OK).json(Object.assign({}, tournament.toJSON(), {
       matches
     }));
@@ -1220,6 +1232,7 @@ exports.signUp = signUp;
 exports.login = login;
 exports.getUser = getUser;
 exports.updateUser = updateUser;
+exports.deleteUser = deleteUser;
 
 var _httpStatus = __webpack_require__(4);
 
@@ -1266,6 +1279,16 @@ async function updateUser(req, res) {
   }
 }
 
+async function deleteUser(req, res) {
+  try {
+    const user = await _user2.default.findById(req.params.id);
+    await user.remove();
+    return res.sendStatus(_httpStatus2.default.OK);
+  } catch (e) {
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
+  }
+}
+
 /***/ }),
 /* 26 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -1303,6 +1326,7 @@ routes.post('/signup', (0, _expressValidation2.default)(_user3.default.signup), 
 routes.post('/login', _auth.authLocal, userController.login);
 routes.get('/me', _auth.authJwt, userController.getUser);
 routes.patch('/me', _auth.authJwt, userController.updateUser);
+routes.delete('/me', _auth.authJwt, userController.deleteUser);
 
 exports.default = routes;
 

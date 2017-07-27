@@ -24,6 +24,7 @@ app.listen(constants.PORT, err => {
       `Server listening to port ${constants.PORT}
       -----------
       Running on ${process.env.NODE_ENV}
-      `);
+      `,
+    );
   }
 });

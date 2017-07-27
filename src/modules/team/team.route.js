@@ -13,7 +13,7 @@ routes.post(
   '/createTeam',
   authJwt,
   validate(teamValidator.createTeam),
-  TeamController.createTeam
+  TeamController.createTeam,
 );
 
 export default routes;
