@@ -63,3 +63,24 @@ export async function createMatches(req, res) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);
   }
 }
+
+export async function updateTournament(req, res) {
+  try {
+    const update = await Tournament.findByIdAndUpdate(req.params.id)
+    Object.keys(req.body).forEach(key => {
+      update[key] = req.body[key];
+    })
+    return res.status(HTTPStatus.ACCEPTED).json(update.save())
+  } catch (e) {
+    return res.status(HTTPStatus.BAD_REQUEST).json(e);
+  }
+}
+
+export async function deleteTournament(req, res) {
+  try {
+    await Tournament.findByd(req.params.id).remove()
+    return res.status(HTTPStatus.ACCEPTED);
+  } catch (e) {
+    return res.status(HTTPStatus.BAD_REQUEST).json(e)
+  }
+}

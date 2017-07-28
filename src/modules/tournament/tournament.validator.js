@@ -13,8 +13,7 @@ export default {
         .positive()
         .required(),
       // TODO: change this to be a date type
-      tournamentStarts: Joi.string().required(),
-      willBePlayed: Joi.string().required(),
+      startDate: Joi.string().required(),
       state: Joi.string().required(),
       address: Joi.string().required(),
       city: Joi.string().required(),

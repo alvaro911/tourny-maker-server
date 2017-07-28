@@ -224,7 +224,9 @@ UserSchema.methods = {
       _id: this._id,
       userName: this.userName,
       token: `JWT ${this.createToken()}`,
-      email: this.email
+      email: this.email,
+      name: this.firstName,
+      lastName: this.lastName
     };
   },
   toJSON() {
@@ -555,17 +557,10 @@ const TournamentSchema = new _mongoose.Schema({
     trim: true,
     required: [true, 'A minimum amount of players has to be set']
   },
-  // TODO: change this to be a date type
-  tournamentStarts: {
-    type: String,
+  startDate: {
+    type: Date,
     trim: true,
     required: [true, 'Provide a starting date']
-  },
-  // TODO: change this to be a date type©
-  willBePlayed: {
-    type: String,
-    trim: true,
-    required: [true, 'How often will tournaments play?']
   },
   state: {
     type: String,
@@ -1074,6 +1069,8 @@ exports.createTournament = createTournament;
 exports.getTournaments = getTournaments;
 exports.getTournamentById = getTournamentById;
 exports.createMatches = createMatches;
+exports.updateTournament = updateTournament;
+exports.deleteTournament = deleteTournament;
 
 var _httpStatus = __webpack_require__(4);
 
@@ -1141,6 +1138,27 @@ async function createMatches(req, res) {
   }
 }
 
+async function updateTournament(req, res) {
+  try {
+    const update = await _tournament2.default.findByIdAndUpdate(req.params.id);
+    Object.keys(req.body).forEach(key => {
+      update[key] = req.body[key];
+    });
+    return res.status(_httpStatus2.default.ACCEPTED).json(update.save());
+  } catch (e) {
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
+  }
+}
+
+async function deleteTournament(req, res) {
+  try {
+    await _tournament2.default.findByd(req.params.id).remove();
+    return res.status(_httpStatus2.default.ACCEPTED);
+  } catch (e) {
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
+  }
+}
+
 /***/ }),
 /* 23 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -1182,6 +1200,10 @@ routes.get('/', _auth.authJwt, tournamentController.getTournaments);
 
 routes.get('/:id', _auth.authJwt, tournamentController.getTournamentById);
 
+routes.patch('/:id', _auth.creatorJwt, tournamentController.updateTournament);
+
+routes.delete('/:id', _auth.creatorJwt, tournamentController.deleteTournament);
+
 exports.default = routes;
 
 /***/ }),
@@ -1208,8 +1230,7 @@ exports.default = {
       numberOfTeams: _joi2.default.number().integer().positive().required(),
       minimumNumPlayers: _joi2.default.number().integer().positive().required(),
       // TODO: change this to be a date type
-      tournamentStarts: _joi2.default.string().required(),
-      willBePlayed: _joi2.default.string().required(),
+      startDate: _joi2.default.string().required(),
       state: _joi2.default.string().required(),
       address: _joi2.default.string().required(),
       city: _joi2.default.string().required(),

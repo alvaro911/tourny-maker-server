@@ -27,17 +27,10 @@ const TournamentSchema = new Schema(
         'A minimum amount of players has to be set',
       ],
     },
-    // TODO: change this to be a date type
-    tournamentStarts: {
-      type: String,
+    startDate: {
+      type: Date,
       trim: true,
       required: [true, 'Provide a starting date'],
-    },
-    // TODO: change this to be a date type©
-    willBePlayed: {
-      type: String,
-      trim: true,
-      required: [true, 'How often will tournaments play?'],
     },
     state: {
       type: String,
