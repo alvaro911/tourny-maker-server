@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 
 import { passwordReg } from './user.validator';
 import constants from '../../config/constants';
+import TournamentModel from '../tournament/tournament.model';
 
 const UserSchema = new Schema(
   {
@@ -64,6 +65,11 @@ UserSchema.pre('save', function(next) {
   return next();
 });
 
+UserSchema.pre('remove', async function(next) {
+  await TournamentModel.remove({ user: this._id });
+  return next();
+});
+
 UserSchema.methods = {
   _hashPassword(password) {
     return hashSync(password);
@@ -85,7 +91,7 @@ UserSchema.methods = {
       userName: this.userName,
       token: `JWT ${this.createToken()}`,
       email: this.email,
-      name: this.firstName,
+      firstName: this.firstName,
       lastName: this.lastName,
     };
   },

@@ -57,26 +57,12 @@ TeamSchema.methods = {
       gameResult: this.gameResult,
     };
   },
-  addPoints() {
-    switch (this.gameResult) {
-      case 'WIN':
-        return 3;
-      case 'DRAW':
-        return 1;
-      default:
-        return 0;
-    }
-  },
-  savePoints() {
-    this.points = this.addPoints();
-  },
 };
 
 TeamSchema.statics = {
-  createTeam(args, user) {
+  createTeam(args) {
     return this.create({
       ...args,
-      user,
     });
   },
 };

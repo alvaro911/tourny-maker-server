@@ -17,7 +17,11 @@ routes.post(
 );
 routes.post('/login', authLocal, userController.login);
 routes.get('/me', authJwt, userController.getUser);
-routes.patch('/me', authJwt, userController.updateUser);
-routes.delete('/me', authJwt, userController.deleteUser);
+routes.patch('/me/:id', authJwt, userController.updateUser);
+routes.delete(
+  '/me/:id',
+  authJwt,
+  userController.deleteUser,
+);
 
 export default routes;

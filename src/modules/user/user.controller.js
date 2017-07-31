@@ -30,14 +30,16 @@ export async function getUser(req, res) {
 }
 
 export async function updateUser(req, res) {
+  console.log(req.body);
   try {
-    const userUpdate = await User.findById(req.user._id);
+    const userUpdate = await User.findById(req.params.id);
     Object.keys(req.body).forEach(key => {
       userUpdate[key] = req.body[key];
     });
+    await userUpdate.save();
     return res
       .status(HTTPStatus.OK)
-      .json(await userUpdate.save());
+      .json(userUpdate.toAuthJSON());
   } catch (e) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);
   }

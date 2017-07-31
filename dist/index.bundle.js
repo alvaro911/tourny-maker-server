@@ -121,133 +121,12 @@ exports.default = Object.assign({}, defaultConfig, envConfig(process.env.NODE_EN
 
 /***/ }),
 /* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _mongoose = __webpack_require__(1);
-
-var _mongoose2 = _interopRequireDefault(_mongoose);
-
-var _validator = __webpack_require__(37);
-
-var _validator2 = _interopRequireDefault(_validator);
-
-var _bcryptNodejs = __webpack_require__(27);
-
-var _jsonwebtoken = __webpack_require__(32);
-
-var _jsonwebtoken2 = _interopRequireDefault(_jsonwebtoken);
-
-var _user = __webpack_require__(11);
-
-var _constants = __webpack_require__(2);
-
-var _constants2 = _interopRequireDefault(_constants);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const UserSchema = new _mongoose.Schema({
-  email: {
-    type: String,
-    unique: true,
-    required: ['true', 'Email is required'],
-    trim: true,
-    validate: {
-      validator(email) {
-        return _validator2.default.isEmail(email);
-      },
-      message: '{VALUE} is not a valid email'
-    }
-  },
-  firstName: {
-    type: String,
-    required: [true, 'First name is required'],
-    trim: true
-  },
-  lastName: {
-    type: String,
-    required: [true, 'Last name is required'],
-    trim: true
-  },
-  userName: {
-    type: String,
-    required: [true, 'username is required'],
-    unique: true,
-    trim: true
-  },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    trim: true,
-    minlength: [6, 'Password needs to be longer'],
-    validate: {
-      validator(password) {
-        return _user.passwordReg.test(password);
-      },
-      message: '{VALUE} is not a valid password'
-    }
-  },
-  role: {
-    type: String,
-    default: 'CREATOR',
-    enum: ['PLAYER', 'CREATOR', 'ADMIN']
-  }
-}, { timeStamps: true });
-
-UserSchema.pre('save', function (next) {
-  if (this.isModified('password')) {
-    this.password = this._hashPassword(this.password);
-  }
-  return next();
-});
-
-UserSchema.methods = {
-  _hashPassword(password) {
-    return (0, _bcryptNodejs.hashSync)(password);
-  },
-  authUser(password) {
-    return (0, _bcryptNodejs.compareSync)(password, this.password);
-  },
-  createToken() {
-    return _jsonwebtoken2.default.sign({
-      _id: this._id
-    }, _constants2.default.JWT_SECRET);
-  },
-  toAuthJSON() {
-    return {
-      _id: this._id,
-      userName: this.userName,
-      token: `JWT ${this.createToken()}`,
-      email: this.email,
-      name: this.firstName,
-      lastName: this.lastName
-    };
-  },
-  toJSON() {
-    return {
-      _id: this._id,
-      userName: this.userName,
-      email: this.email
-    };
-  }
-};
-
-exports.default = _mongoose2.default.model('User', UserSchema);
-
-/***/ }),
-/* 4 */
 /***/ (function(module, exports) {
 
 module.exports = require("http-status");
 
 /***/ }),
-/* 5 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -312,7 +191,7 @@ MatchSchema.methods = {
 exports.default = _mongoose2.default.model('Match', MatchSchema);
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -379,31 +258,146 @@ TeamSchema.methods = {
       points: this.points,
       gameResult: this.gameResult
     };
-  },
-  addPoints() {
-    switch (this.gameResult) {
-      case 'WIN':
-        return 3;
-      case 'DRAW':
-        return 1;
-      default:
-        return 0;
-    }
-  },
-  savePoints() {
-    this.points = this.addPoints();
   }
 };
 
 TeamSchema.statics = {
-  createTeam(args, user) {
-    return this.create(Object.assign({}, args, {
-      user
-    }));
+  createTeam(args) {
+    return this.create(Object.assign({}, args));
   }
 };
 
 exports.default = _mongoose2.default.model('Team', TeamSchema);
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _mongoose = __webpack_require__(1);
+
+var _mongoose2 = _interopRequireDefault(_mongoose);
+
+var _validator = __webpack_require__(37);
+
+var _validator2 = _interopRequireDefault(_validator);
+
+var _bcryptNodejs = __webpack_require__(27);
+
+var _jsonwebtoken = __webpack_require__(32);
+
+var _jsonwebtoken2 = _interopRequireDefault(_jsonwebtoken);
+
+var _user = __webpack_require__(11);
+
+var _constants = __webpack_require__(2);
+
+var _constants2 = _interopRequireDefault(_constants);
+
+var _tournament = __webpack_require__(10);
+
+var _tournament2 = _interopRequireDefault(_tournament);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const UserSchema = new _mongoose.Schema({
+  email: {
+    type: String,
+    unique: true,
+    required: ['true', 'Email is required'],
+    trim: true,
+    validate: {
+      validator(email) {
+        return _validator2.default.isEmail(email);
+      },
+      message: '{VALUE} is not a valid email'
+    }
+  },
+  firstName: {
+    type: String,
+    required: [true, 'First name is required'],
+    trim: true
+  },
+  lastName: {
+    type: String,
+    required: [true, 'Last name is required'],
+    trim: true
+  },
+  userName: {
+    type: String,
+    required: [true, 'username is required'],
+    unique: true,
+    trim: true
+  },
+  password: {
+    type: String,
+    required: [true, 'Password is required'],
+    trim: true,
+    minlength: [6, 'Password needs to be longer'],
+    validate: {
+      validator(password) {
+        return _user.passwordReg.test(password);
+      },
+      message: '{VALUE} is not a valid password'
+    }
+  },
+  role: {
+    type: String,
+    default: 'CREATOR',
+    enum: ['PLAYER', 'CREATOR', 'ADMIN']
+  }
+}, { timeStamps: true });
+
+UserSchema.pre('save', function (next) {
+  if (this.isModified('password')) {
+    this.password = this._hashPassword(this.password);
+  }
+  return next();
+});
+
+UserSchema.pre('remove', async function (next) {
+  await _tournament2.default.remove({ user: this._id });
+  return next();
+});
+
+UserSchema.methods = {
+  _hashPassword(password) {
+    return (0, _bcryptNodejs.hashSync)(password);
+  },
+  authUser(password) {
+    return (0, _bcryptNodejs.compareSync)(password, this.password);
+  },
+  createToken() {
+    return _jsonwebtoken2.default.sign({
+      _id: this._id
+    }, _constants2.default.JWT_SECRET);
+  },
+  toAuthJSON() {
+    return {
+      _id: this._id,
+      userName: this.userName,
+      token: `JWT ${this.createToken()}`,
+      email: this.email,
+      firstName: this.firstName,
+      lastName: this.lastName
+    };
+  },
+  toJSON() {
+    return {
+      _id: this._id,
+      userName: this.userName,
+      email: this.email
+    };
+  }
+};
+
+exports.default = _mongoose2.default.model('User', UserSchema);
 
 /***/ }),
 /* 7 */
@@ -427,7 +421,7 @@ var _passportLocal2 = _interopRequireDefault(_passportLocal);
 
 var _passportJwt = __webpack_require__(34);
 
-var _user = __webpack_require__(3);
+var _user = __webpack_require__(6);
 
 var _user2 = _interopRequireDefault(_user);
 
@@ -534,7 +528,7 @@ var _roundrobin = __webpack_require__(36);
 
 var _roundrobin2 = _interopRequireDefault(_roundrobin);
 
-var _match = __webpack_require__(5);
+var _match = __webpack_require__(4);
 
 var _match2 = _interopRequireDefault(_match);
 
@@ -860,15 +854,15 @@ Object.defineProperty(exports, "__esModule", {
 exports.matchById = matchById;
 exports.matchResult = matchResult;
 
-var _httpStatus = __webpack_require__(4);
+var _httpStatus = __webpack_require__(3);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
-var _match = __webpack_require__(5);
+var _match = __webpack_require__(4);
 
 var _match2 = _interopRequireDefault(_match);
 
-var _team = __webpack_require__(6);
+var _team = __webpack_require__(5);
 
 var _team2 = _interopRequireDefault(_team);
 
@@ -946,17 +940,13 @@ Object.defineProperty(exports, "__esModule", {
 exports.getTeamById = getTeamById;
 exports.createTeam = createTeam;
 
-var _httpStatus = __webpack_require__(4);
+var _httpStatus = __webpack_require__(3);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
-var _team = __webpack_require__(6);
+var _team = __webpack_require__(5);
 
 var _team2 = _interopRequireDefault(_team);
-
-var _user = __webpack_require__(3);
-
-var _user2 = _interopRequireDefault(_user);
 
 var _tournament = __webpack_require__(10);
 
@@ -975,8 +965,7 @@ async function getTeamById(req, res) {
 
 async function createTeam(req, res) {
   try {
-    const team = await _team2.default.createTeam(req.body, req.user._id);
-    await _user2.default.findByIdAndUpdate(req.user._id, { team });
+    const team = await _team2.default.createTeam(req.body);
     await _tournament2.default.findByIdAndUpdate(req.body.tournament, {
       $push: {
         teams: team,
@@ -1072,7 +1061,7 @@ exports.createMatches = createMatches;
 exports.updateTournament = updateTournament;
 exports.deleteTournament = deleteTournament;
 
-var _httpStatus = __webpack_require__(4);
+var _httpStatus = __webpack_require__(3);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
@@ -1080,15 +1069,15 @@ var _tournament = __webpack_require__(10);
 
 var _tournament2 = _interopRequireDefault(_tournament);
 
-var _user = __webpack_require__(3);
+var _user = __webpack_require__(6);
 
 var _user2 = _interopRequireDefault(_user);
 
-var _match = __webpack_require__(5);
+var _match = __webpack_require__(4);
 
 var _match2 = _interopRequireDefault(_match);
 
-__webpack_require__(6);
+__webpack_require__(5);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1255,11 +1244,11 @@ exports.getUser = getUser;
 exports.updateUser = updateUser;
 exports.deleteUser = deleteUser;
 
-var _httpStatus = __webpack_require__(4);
+var _httpStatus = __webpack_require__(3);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
-var _user = __webpack_require__(3);
+var _user = __webpack_require__(6);
 
 var _user2 = _interopRequireDefault(_user);
 
@@ -1289,12 +1278,14 @@ async function getUser(req, res) {
 }
 
 async function updateUser(req, res) {
+  console.log(req.body);
   try {
-    const userUpdate = await _user2.default.findById(req.user._id);
+    const userUpdate = await _user2.default.findById(req.params.id);
     Object.keys(req.body).forEach(key => {
       userUpdate[key] = req.body[key];
     });
-    return res.status(_httpStatus2.default.OK).json((await userUpdate.save()));
+    await userUpdate.save();
+    return res.status(_httpStatus2.default.OK).json(userUpdate.toAuthJSON());
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
@@ -1346,8 +1337,8 @@ const routes = (0, _express.Router)();
 routes.post('/signup', (0, _expressValidation2.default)(_user3.default.signup), userController.signUp);
 routes.post('/login', _auth.authLocal, userController.login);
 routes.get('/me', _auth.authJwt, userController.getUser);
-routes.patch('/me', _auth.authJwt, userController.updateUser);
-routes.delete('/me', _auth.authJwt, userController.deleteUser);
+routes.patch('/me/:id', _auth.authJwt, userController.updateUser);
+routes.delete('/me/:id', _auth.authJwt, userController.deleteUser);
 
 exports.default = routes;
 

@@ -35,8 +35,16 @@ routes.get(
   tournamentController.getTournamentById,
 );
 
-routes.patch('/:id', creatorJwt, tournamentController.updateTournament)
+routes.patch(
+  '/:id',
+  creatorJwt,
+  tournamentController.updateTournament,
+);
 
-routes.delete('/:id', creatorJwt, tournamentController.deleteTournament)
+routes.delete(
+  '/:id',
+  creatorJwt,
+  tournamentController.deleteTournament,
+);
 
 export default routes;

@@ -1,7 +1,6 @@
 import HTTPStatus from 'http-status';
 
 import Team from './team.model';
-import User from '../user/user.model';
 import Tournament from '../tournament/tournament.model';
 
 export async function getTeamById(req, res) {
@@ -15,11 +14,7 @@ export async function getTeamById(req, res) {
 
 export async function createTeam(req, res) {
   try {
-    const team = await Team.createTeam(
-      req.body,
-      req.user._id,
-    );
-    await User.findByIdAndUpdate(req.user._id, { team });
+    const team = await Team.createTeam(req.body);
     await Tournament.findByIdAndUpdate(
       req.body.tournament,
       {
