@@ -284,246 +284,6 @@ var _mongoose = __webpack_require__(1);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var _validator = __webpack_require__(37);
-
-var _validator2 = _interopRequireDefault(_validator);
-
-var _bcryptNodejs = __webpack_require__(27);
-
-var _jsonwebtoken = __webpack_require__(32);
-
-var _jsonwebtoken2 = _interopRequireDefault(_jsonwebtoken);
-
-var _user = __webpack_require__(11);
-
-var _constants = __webpack_require__(2);
-
-var _constants2 = _interopRequireDefault(_constants);
-
-var _tournament = __webpack_require__(10);
-
-var _tournament2 = _interopRequireDefault(_tournament);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const UserSchema = new _mongoose.Schema({
-  email: {
-    type: String,
-    unique: true,
-    required: ['true', 'Email is required'],
-    trim: true,
-    validate: {
-      validator(email) {
-        return _validator2.default.isEmail(email);
-      },
-      message: '{VALUE} is not a valid email'
-    }
-  },
-  firstName: {
-    type: String,
-    required: [true, 'First name is required'],
-    trim: true
-  },
-  lastName: {
-    type: String,
-    required: [true, 'Last name is required'],
-    trim: true
-  },
-  userName: {
-    type: String,
-    required: [true, 'username is required'],
-    unique: true,
-    trim: true
-  },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    trim: true,
-    minlength: [6, 'Password needs to be longer'],
-    validate: {
-      validator(password) {
-        return _user.passwordReg.test(password);
-      },
-      message: '{VALUE} is not a valid password'
-    }
-  },
-  role: {
-    type: String,
-    default: 'CREATOR',
-    enum: ['PLAYER', 'CREATOR', 'ADMIN']
-  }
-}, { timeStamps: true });
-
-UserSchema.pre('save', function (next) {
-  if (this.isModified('password')) {
-    this.password = this._hashPassword(this.password);
-  }
-  return next();
-});
-
-UserSchema.pre('remove', async function (next) {
-  await _tournament2.default.remove({ user: this._id });
-  return next();
-});
-
-UserSchema.methods = {
-  _hashPassword(password) {
-    return (0, _bcryptNodejs.hashSync)(password);
-  },
-  authUser(password) {
-    return (0, _bcryptNodejs.compareSync)(password, this.password);
-  },
-  createToken() {
-    return _jsonwebtoken2.default.sign({
-      _id: this._id
-    }, _constants2.default.JWT_SECRET);
-  },
-  toAuthJSON() {
-    return {
-      _id: this._id,
-      userName: this.userName,
-      token: `JWT ${this.createToken()}`,
-      email: this.email,
-      firstName: this.firstName,
-      lastName: this.lastName
-    };
-  },
-  toJSON() {
-    return {
-      _id: this._id,
-      userName: this.userName,
-      email: this.email
-    };
-  }
-};
-
-exports.default = _mongoose2.default.model('User', UserSchema);
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.creatorJwt = exports.authJwt = exports.authLocal = undefined;
-
-var _passport = __webpack_require__(12);
-
-var _passport2 = _interopRequireDefault(_passport);
-
-var _passportLocal = __webpack_require__(35);
-
-var _passportLocal2 = _interopRequireDefault(_passportLocal);
-
-var _passportJwt = __webpack_require__(34);
-
-var _user = __webpack_require__(6);
-
-var _user2 = _interopRequireDefault(_user);
-
-var _constants = __webpack_require__(2);
-
-var _constants2 = _interopRequireDefault(_constants);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const localOptions = {
-  usernameField: 'email'
-};
-
-const localStg = new _passportLocal2.default(localOptions, async (email, password, done) => {
-  try {
-    const user = await _user2.default.findOne({ email });
-    if (!user) {
-      return done(null, false);
-    } else if (!user.authUser(password)) {
-      return done(null, false);
-    }
-
-    return done(null, user);
-  } catch (e) {
-    return done(e, false);
-  }
-});
-
-const jwtOptions = {
-  jwtFromRequest: _passportJwt.ExtractJwt.fromAuthHeader('Authorization'),
-  secretOrKey: _constants2.default.JWT_SECRET
-};
-
-const jwtStrategy = new _passportJwt.Strategy(jwtOptions, async (payload, done) => {
-  try {
-    const user = await _user2.default.findById(payload._id);
-
-    if (!user) {
-      return done(null, false);
-    }
-
-    return done(null, user);
-  } catch (e) {
-    return done(e, false);
-  }
-});
-
-const creatorStrategy = new _passportJwt.Strategy(jwtOptions, async (payload, done) => {
-  try {
-    const user = await _user2.default.findById(payload._id);
-
-    if (!user || user.role !== 'CREATOR') {
-      return done(null, false);
-    }
-
-    return done(null, user);
-  } catch (e) {
-    return done(e, false);
-  }
-});
-
-_passport2.default.use(localStg);
-_passport2.default.use(jwtStrategy);
-_passport2.default.use(creatorStrategy);
-
-const authLocal = exports.authLocal = _passport2.default.authenticate('local', {
-  session: false
-});
-const authJwt = exports.authJwt = _passport2.default.authenticate('jwt', {
-  session: false
-});
-const creatorJwt = exports.creatorJwt = _passport2.default.authenticate('jwt', {
-  session: false
-});
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports) {
-
-module.exports = require("express-validation");
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports) {
-
-module.exports = require("joi");
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _mongoose = __webpack_require__(1);
-
-var _mongoose2 = _interopRequireDefault(_mongoose);
-
 var _roundrobin = __webpack_require__(36);
 
 var _roundrobin2 = _interopRequireDefault(_roundrobin);
@@ -633,6 +393,246 @@ TournamentSchema.methods = {
 exports.default = _mongoose2.default.model('Tournament', TournamentSchema);
 
 /***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _mongoose = __webpack_require__(1);
+
+var _mongoose2 = _interopRequireDefault(_mongoose);
+
+var _validator = __webpack_require__(37);
+
+var _validator2 = _interopRequireDefault(_validator);
+
+var _bcryptNodejs = __webpack_require__(27);
+
+var _jsonwebtoken = __webpack_require__(32);
+
+var _jsonwebtoken2 = _interopRequireDefault(_jsonwebtoken);
+
+var _user = __webpack_require__(11);
+
+var _constants = __webpack_require__(2);
+
+var _constants2 = _interopRequireDefault(_constants);
+
+var _tournament = __webpack_require__(6);
+
+var _tournament2 = _interopRequireDefault(_tournament);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const UserSchema = new _mongoose.Schema({
+  email: {
+    type: String,
+    unique: true,
+    required: ['true', 'Email is required'],
+    trim: true,
+    validate: {
+      validator(email) {
+        return _validator2.default.isEmail(email);
+      },
+      message: '{VALUE} is not a valid email'
+    }
+  },
+  firstName: {
+    type: String,
+    required: [true, 'First name is required'],
+    trim: true
+  },
+  lastName: {
+    type: String,
+    required: [true, 'Last name is required'],
+    trim: true
+  },
+  userName: {
+    type: String,
+    required: [true, 'username is required'],
+    unique: true,
+    trim: true
+  },
+  password: {
+    type: String,
+    required: [true, 'Password is required'],
+    trim: true,
+    minlength: [6, 'Password needs to be longer'],
+    validate: {
+      validator(password) {
+        return _user.passwordReg.test(password);
+      },
+      message: '{VALUE} is not a valid password'
+    }
+  },
+  role: {
+    type: String,
+    default: 'CREATOR',
+    enum: ['PLAYER', 'CREATOR', 'ADMIN']
+  }
+}, { timeStamps: true });
+
+UserSchema.pre('save', function (next) {
+  if (this.isModified('password')) {
+    this.password = this._hashPassword(this.password);
+  }
+  return next();
+});
+
+UserSchema.pre('remove', async function (next) {
+  await _tournament2.default.remove({ user: this._id });
+  return next();
+});
+
+UserSchema.methods = {
+  _hashPassword(password) {
+    return (0, _bcryptNodejs.hashSync)(password);
+  },
+  authUser(password) {
+    return (0, _bcryptNodejs.compareSync)(password, this.password);
+  },
+  createToken() {
+    return _jsonwebtoken2.default.sign({
+      _id: this._id
+    }, _constants2.default.JWT_SECRET);
+  },
+  toAuthJSON() {
+    return {
+      _id: this._id,
+      userName: this.userName,
+      token: `JWT ${this.createToken()}`,
+      email: this.email,
+      firstName: this.firstName,
+      lastName: this.lastName
+    };
+  },
+  toJSON() {
+    return {
+      _id: this._id,
+      userName: this.userName,
+      email: this.email
+    };
+  }
+};
+
+exports.default = _mongoose2.default.model('User', UserSchema);
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.creatorJwt = exports.authJwt = exports.authLocal = undefined;
+
+var _passport = __webpack_require__(12);
+
+var _passport2 = _interopRequireDefault(_passport);
+
+var _passportLocal = __webpack_require__(35);
+
+var _passportLocal2 = _interopRequireDefault(_passportLocal);
+
+var _passportJwt = __webpack_require__(34);
+
+var _user = __webpack_require__(7);
+
+var _user2 = _interopRequireDefault(_user);
+
+var _constants = __webpack_require__(2);
+
+var _constants2 = _interopRequireDefault(_constants);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const localOptions = {
+  usernameField: 'email'
+};
+
+const localStg = new _passportLocal2.default(localOptions, async (email, password, done) => {
+  try {
+    const user = await _user2.default.findOne({ email });
+    if (!user) {
+      return done(null, false);
+    } else if (!user.authUser(password)) {
+      return done(null, false);
+    }
+
+    return done(null, user);
+  } catch (e) {
+    return done(e, false);
+  }
+});
+
+const jwtOptions = {
+  jwtFromRequest: _passportJwt.ExtractJwt.fromAuthHeader('Authorization'),
+  secretOrKey: _constants2.default.JWT_SECRET
+};
+
+const jwtStrategy = new _passportJwt.Strategy(jwtOptions, async (payload, done) => {
+  try {
+    const user = await _user2.default.findById(payload._id);
+
+    if (!user) {
+      return done(null, false);
+    }
+
+    return done(null, user);
+  } catch (e) {
+    return done(e, false);
+  }
+});
+
+const creatorStrategy = new _passportJwt.Strategy(jwtOptions, async (payload, done) => {
+  try {
+    const user = await _user2.default.findById(payload._id);
+
+    if (!user || user.role !== 'CREATOR') {
+      return done(null, false);
+    }
+
+    return done(null, user);
+  } catch (e) {
+    return done(e, false);
+  }
+});
+
+_passport2.default.use(localStg);
+_passport2.default.use(jwtStrategy);
+_passport2.default.use(creatorStrategy);
+
+const authLocal = exports.authLocal = _passport2.default.authenticate('local', {
+  session: false
+});
+const authJwt = exports.authJwt = _passport2.default.authenticate('jwt', {
+  session: false
+});
+const creatorJwt = exports.creatorJwt = _passport2.default.authenticate('jwt', {
+  session: false
+});
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports) {
+
+module.exports = require("express-validation");
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports) {
+
+module.exports = require("joi");
+
+/***/ }),
 /* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -644,7 +644,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.passwordReg = undefined;
 
-var _joi = __webpack_require__(9);
+var _joi = __webpack_require__(10);
 
 var _joi2 = _interopRequireDefault(_joi);
 
@@ -948,7 +948,7 @@ var _team = __webpack_require__(5);
 
 var _team2 = _interopRequireDefault(_team);
 
-var _tournament = __webpack_require__(10);
+var _tournament = __webpack_require__(6);
 
 var _tournament2 = _interopRequireDefault(_tournament);
 
@@ -991,7 +991,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _express = __webpack_require__(0);
 
-var _expressValidation = __webpack_require__(8);
+var _expressValidation = __webpack_require__(9);
 
 var _expressValidation2 = _interopRequireDefault(_expressValidation);
 
@@ -999,7 +999,7 @@ var _team = __webpack_require__(19);
 
 var TeamController = _interopRequireWildcard(_team);
 
-var _auth = __webpack_require__(7);
+var _auth = __webpack_require__(8);
 
 var _team2 = __webpack_require__(21);
 
@@ -1028,7 +1028,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _joi = __webpack_require__(9);
+var _joi = __webpack_require__(10);
 
 var _joi2 = _interopRequireDefault(_joi);
 
@@ -1060,16 +1060,17 @@ exports.getTournamentById = getTournamentById;
 exports.createMatches = createMatches;
 exports.updateTournament = updateTournament;
 exports.deleteTournament = deleteTournament;
+exports.getTournamentsByUserId = getTournamentsByUserId;
 
 var _httpStatus = __webpack_require__(3);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
-var _tournament = __webpack_require__(10);
+var _tournament = __webpack_require__(6);
 
 var _tournament2 = _interopRequireDefault(_tournament);
 
-var _user = __webpack_require__(6);
+var _user = __webpack_require__(7);
 
 var _user2 = _interopRequireDefault(_user);
 
@@ -1148,6 +1149,15 @@ async function deleteTournament(req, res) {
   }
 }
 
+async function getTournamentsByUserId(req, res) {
+  try {
+    const tournaments = await _tournament2.default.find({ user: req.params.id });
+    return res.status(_httpStatus2.default.OK).json(tournaments);
+  } catch (e) {
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
+  }
+}
+
 /***/ }),
 /* 23 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -1161,7 +1171,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _express = __webpack_require__(0);
 
-var _expressValidation = __webpack_require__(8);
+var _expressValidation = __webpack_require__(9);
 
 var _expressValidation2 = _interopRequireDefault(_expressValidation);
 
@@ -1169,7 +1179,7 @@ var _tournament = __webpack_require__(22);
 
 var tournamentController = _interopRequireWildcard(_tournament);
 
-var _auth = __webpack_require__(7);
+var _auth = __webpack_require__(8);
 
 var _tournament2 = __webpack_require__(24);
 
@@ -1189,6 +1199,8 @@ routes.get('/', _auth.authJwt, tournamentController.getTournaments);
 
 routes.get('/:id', _auth.authJwt, tournamentController.getTournamentById);
 
+routes.get('/tournamentId/:id', _auth.creatorJwt, tournamentController.getTournamentsByUserId);
+
 routes.patch('/:id', _auth.creatorJwt, tournamentController.updateTournament);
 
 routes.delete('/:id', _auth.creatorJwt, tournamentController.deleteTournament);
@@ -1206,7 +1218,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _joi = __webpack_require__(9);
+var _joi = __webpack_require__(10);
 
 var _joi2 = _interopRequireDefault(_joi);
 
@@ -1248,7 +1260,7 @@ var _httpStatus = __webpack_require__(3);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
-var _user = __webpack_require__(6);
+var _user = __webpack_require__(7);
 
 var _user2 = _interopRequireDefault(_user);
 
@@ -1314,11 +1326,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _express = __webpack_require__(0);
 
-var _expressValidation = __webpack_require__(8);
+var _expressValidation = __webpack_require__(9);
 
 var _expressValidation2 = _interopRequireDefault(_expressValidation);
 
-var _auth = __webpack_require__(7);
+var _auth = __webpack_require__(8);
 
 var _user = __webpack_require__(25);
 

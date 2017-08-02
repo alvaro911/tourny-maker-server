@@ -88,3 +88,12 @@ export async function deleteTournament(req, res) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);
   }
 }
+
+export async function getTournamentsByUserId(req, res) {
+  try {
+    const tournaments = await Tournament.find({user: req.params.id})
+    return res.status(HTTPStatus.OK).json(tournaments)
+  } catch (e) {
+    return res.status(HTTPStatus.BAD_REQUEST).json(e)
+  }
+}

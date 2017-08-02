@@ -35,6 +35,8 @@ routes.get(
   tournamentController.getTournamentById,
 );
 
+routes.get('/tournamentId/:id', creatorJwt, tournamentController.getTournamentsByUserId)
+
 routes.patch(
   '/:id',
   creatorJwt,
