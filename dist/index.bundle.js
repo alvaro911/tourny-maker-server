@@ -223,7 +223,8 @@ const TeamSchema = new _mongoose.Schema({
     playerNumber: {
       type: Number,
       trim: true,
-      required: [true, 'Need a player number']
+      required: [true, 'Need a player number'],
+      unique: true
     }
   }],
   player: {
@@ -1142,8 +1143,8 @@ async function updateTournament(req, res) {
 
 async function deleteTournament(req, res) {
   try {
-    await _tournament2.default.findByd(req.params.id).remove();
-    return res.status(_httpStatus2.default.ACCEPTED);
+    await _tournament2.default.findByIdAndRemove(req.params.id);
+    return res.sendStatus(_httpStatus2.default.OK);
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
@@ -1151,7 +1152,9 @@ async function deleteTournament(req, res) {
 
 async function getTournamentsByUserId(req, res) {
   try {
-    const tournaments = await _tournament2.default.find({ user: req.params.id });
+    const tournaments = await _tournament2.default.find({
+      user: req.params.id
+    });
     return res.status(_httpStatus2.default.OK).json(tournaments);
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);

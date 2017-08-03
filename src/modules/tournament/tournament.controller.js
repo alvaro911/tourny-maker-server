@@ -82,8 +82,8 @@ export async function updateTournament(req, res) {
 
 export async function deleteTournament(req, res) {
   try {
-    await Tournament.findByd(req.params.id).remove();
-    return res.status(HTTPStatus.ACCEPTED);
+    await Tournament.findByIdAndRemove(req.params.id);
+    return res.sendStatus(HTTPStatus.OK);
   } catch (e) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);
   }
@@ -91,9 +91,11 @@ export async function deleteTournament(req, res) {
 
 export async function getTournamentsByUserId(req, res) {
   try {
-    const tournaments = await Tournament.find({user: req.params.id})
-    return res.status(HTTPStatus.OK).json(tournaments)
+    const tournaments = await Tournament.find({
+      user: req.params.id,
+    });
+    return res.status(HTTPStatus.OK).json(tournaments);
   } catch (e) {
-    return res.status(HTTPStatus.BAD_REQUEST).json(e)
+    return res.status(HTTPStatus.BAD_REQUEST).json(e);
   }
 }

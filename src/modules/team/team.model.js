@@ -19,6 +19,7 @@ const TeamSchema = new Schema(
           type: Number,
           trim: true,
           required: [true, 'Need a player number'],
+          unique: true,
         },
       },
     ],
