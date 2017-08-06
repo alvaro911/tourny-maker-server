@@ -53,6 +53,7 @@ const UserSchema = new Schema(
       type: String,
       default: 'CREATOR',
       enum: ['PLAYER', 'CREATOR', 'ADMIN'],
+      required: [true, 'user role is required']
     },
   },
   { timeStamps: true },

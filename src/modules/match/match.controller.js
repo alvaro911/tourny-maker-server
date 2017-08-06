@@ -57,3 +57,12 @@ export async function matchResult(req, res) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);
   }
 }
+
+export async function getMatchesByTournamentId(req, res) {
+  try {
+    const matches = await MatchModel.find({ tournamentId: req.params.id })
+    return res.status(HTTPStatus.OK).json(matches)
+  } catch (e) {
+    return res.status(HTTPStatus.BAD_REQUEST).json(e);
+  }
+}

@@ -121,12 +121,110 @@ exports.default = Object.assign({}, defaultConfig, envConfig(process.env.NODE_EN
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.creatorJwt = exports.authJwt = exports.authLocal = undefined;
+
+var _passport = __webpack_require__(12);
+
+var _passport2 = _interopRequireDefault(_passport);
+
+var _passportLocal = __webpack_require__(35);
+
+var _passportLocal2 = _interopRequireDefault(_passportLocal);
+
+var _passportJwt = __webpack_require__(34);
+
+var _user = __webpack_require__(8);
+
+var _user2 = _interopRequireDefault(_user);
+
+var _constants = __webpack_require__(2);
+
+var _constants2 = _interopRequireDefault(_constants);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const localOptions = {
+  usernameField: 'email'
+};
+
+const localStg = new _passportLocal2.default(localOptions, async (email, password, done) => {
+  try {
+    const user = await _user2.default.findOne({ email });
+    if (!user) {
+      return done(null, false);
+    } else if (!user.authUser(password)) {
+      return done(null, false);
+    }
+
+    return done(null, user);
+  } catch (e) {
+    return done(e, false);
+  }
+});
+
+const jwtOptions = {
+  jwtFromRequest: _passportJwt.ExtractJwt.fromAuthHeader('Authorization'),
+  secretOrKey: _constants2.default.JWT_SECRET
+};
+
+const jwtStrategy = new _passportJwt.Strategy(jwtOptions, async (payload, done) => {
+  try {
+    const user = await _user2.default.findById(payload._id);
+
+    if (!user) {
+      return done(null, false);
+    }
+
+    return done(null, user);
+  } catch (e) {
+    return done(e, false);
+  }
+});
+
+const creatorStrategy = new _passportJwt.Strategy(jwtOptions, async (payload, done) => {
+  try {
+    const user = await _user2.default.findById(payload._id);
+
+    if (!user || user.role !== 'CREATOR') {
+      return done(null, false);
+    }
+
+    return done(null, user);
+  } catch (e) {
+    return done(e, false);
+  }
+});
+
+_passport2.default.use(localStg);
+_passport2.default.use(jwtStrategy);
+_passport2.default.use(creatorStrategy);
+
+const authLocal = exports.authLocal = _passport2.default.authenticate('local', {
+  session: false
+});
+const authJwt = exports.authJwt = _passport2.default.authenticate('jwt', {
+  session: false
+});
+const creatorJwt = exports.creatorJwt = _passport2.default.authenticate('jwt', {
+  session: false
+});
+
+/***/ }),
+/* 4 */
 /***/ (function(module, exports) {
 
 module.exports = require("http-status");
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -191,7 +289,7 @@ MatchSchema.methods = {
 exports.default = _mongoose2.default.model('Match', MatchSchema);
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -271,7 +369,7 @@ TeamSchema.statics = {
 exports.default = _mongoose2.default.model('Team', TeamSchema);
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -289,7 +387,7 @@ var _roundrobin = __webpack_require__(36);
 
 var _roundrobin2 = _interopRequireDefault(_roundrobin);
 
-var _match = __webpack_require__(4);
+var _match = __webpack_require__(5);
 
 var _match2 = _interopRequireDefault(_match);
 
@@ -378,7 +476,7 @@ TournamentSchema.methods = {
       (0, _roundrobin2.default)(teams.length, teams).forEach((round, i) => {
         const week = i + 1;
 
-        round.forEach(async game => await createMatch(week, game, this._id));
+        round.forEach(async game => await createMatch(week, game, this._id, { $push: { matches: game } }));
       });
 
       const matches = await _match2.default.find({
@@ -394,7 +492,7 @@ TournamentSchema.methods = {
 exports.default = _mongoose2.default.model('Tournament', TournamentSchema);
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -424,7 +522,7 @@ var _constants = __webpack_require__(2);
 
 var _constants2 = _interopRequireDefault(_constants);
 
-var _tournament = __webpack_require__(6);
+var _tournament = __webpack_require__(7);
 
 var _tournament2 = _interopRequireDefault(_tournament);
 
@@ -474,7 +572,8 @@ const UserSchema = new _mongoose.Schema({
   role: {
     type: String,
     default: 'CREATOR',
-    enum: ['PLAYER', 'CREATOR', 'ADMIN']
+    enum: ['PLAYER', 'CREATOR', 'ADMIN'],
+    required: [true, 'user role is required']
   }
 }, { timeStamps: true });
 
@@ -522,104 +621,6 @@ UserSchema.methods = {
 };
 
 exports.default = _mongoose2.default.model('User', UserSchema);
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.creatorJwt = exports.authJwt = exports.authLocal = undefined;
-
-var _passport = __webpack_require__(12);
-
-var _passport2 = _interopRequireDefault(_passport);
-
-var _passportLocal = __webpack_require__(35);
-
-var _passportLocal2 = _interopRequireDefault(_passportLocal);
-
-var _passportJwt = __webpack_require__(34);
-
-var _user = __webpack_require__(7);
-
-var _user2 = _interopRequireDefault(_user);
-
-var _constants = __webpack_require__(2);
-
-var _constants2 = _interopRequireDefault(_constants);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const localOptions = {
-  usernameField: 'email'
-};
-
-const localStg = new _passportLocal2.default(localOptions, async (email, password, done) => {
-  try {
-    const user = await _user2.default.findOne({ email });
-    if (!user) {
-      return done(null, false);
-    } else if (!user.authUser(password)) {
-      return done(null, false);
-    }
-
-    return done(null, user);
-  } catch (e) {
-    return done(e, false);
-  }
-});
-
-const jwtOptions = {
-  jwtFromRequest: _passportJwt.ExtractJwt.fromAuthHeader('Authorization'),
-  secretOrKey: _constants2.default.JWT_SECRET
-};
-
-const jwtStrategy = new _passportJwt.Strategy(jwtOptions, async (payload, done) => {
-  try {
-    const user = await _user2.default.findById(payload._id);
-
-    if (!user) {
-      return done(null, false);
-    }
-
-    return done(null, user);
-  } catch (e) {
-    return done(e, false);
-  }
-});
-
-const creatorStrategy = new _passportJwt.Strategy(jwtOptions, async (payload, done) => {
-  try {
-    const user = await _user2.default.findById(payload._id);
-
-    if (!user || user.role !== 'CREATOR') {
-      return done(null, false);
-    }
-
-    return done(null, user);
-  } catch (e) {
-    return done(e, false);
-  }
-});
-
-_passport2.default.use(localStg);
-_passport2.default.use(jwtStrategy);
-_passport2.default.use(creatorStrategy);
-
-const authLocal = exports.authLocal = _passport2.default.authenticate('local', {
-  session: false
-});
-const authJwt = exports.authJwt = _passport2.default.authenticate('jwt', {
-  session: false
-});
-const creatorJwt = exports.creatorJwt = _passport2.default.authenticate('jwt', {
-  session: false
-});
 
 /***/ }),
 /* 9 */
@@ -854,16 +855,17 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.matchById = matchById;
 exports.matchResult = matchResult;
+exports.getMatchesByTournamentId = getMatchesByTournamentId;
 
-var _httpStatus = __webpack_require__(3);
+var _httpStatus = __webpack_require__(4);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
-var _match = __webpack_require__(4);
+var _match = __webpack_require__(5);
 
 var _match2 = _interopRequireDefault(_match);
 
-var _team = __webpack_require__(5);
+var _team = __webpack_require__(6);
 
 var _team2 = _interopRequireDefault(_team);
 
@@ -901,6 +903,15 @@ async function matchResult(req, res) {
   }
 }
 
+async function getMatchesByTournamentId(req, res) {
+  try {
+    const matches = await _match2.default.find({ tournamentId: req.params.id });
+    return res.status(_httpStatus2.default.OK).json(matches);
+  } catch (e) {
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
+  }
+}
+
 /***/ }),
 /* 18 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -918,6 +929,8 @@ var _match = __webpack_require__(17);
 
 var MatchController = _interopRequireWildcard(_match);
 
+var _auth = __webpack_require__(3);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 const routes = (0, _express.Router)();
@@ -925,6 +938,8 @@ const routes = (0, _express.Router)();
 routes.get('/:id', MatchController.matchById);
 
 routes.patch('/:id', MatchController.matchResult);
+
+routes.get('/tournament/:id', _auth.authJwt, MatchController.getMatchesByTournamentId);
 
 exports.default = routes;
 
@@ -941,15 +956,15 @@ Object.defineProperty(exports, "__esModule", {
 exports.getTeamById = getTeamById;
 exports.createTeam = createTeam;
 
-var _httpStatus = __webpack_require__(3);
+var _httpStatus = __webpack_require__(4);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
-var _team = __webpack_require__(5);
+var _team = __webpack_require__(6);
 
 var _team2 = _interopRequireDefault(_team);
 
-var _tournament = __webpack_require__(6);
+var _tournament = __webpack_require__(7);
 
 var _tournament2 = _interopRequireDefault(_tournament);
 
@@ -1000,7 +1015,7 @@ var _team = __webpack_require__(19);
 
 var TeamController = _interopRequireWildcard(_team);
 
-var _auth = __webpack_require__(8);
+var _auth = __webpack_require__(3);
 
 var _team2 = __webpack_require__(21);
 
@@ -1014,7 +1029,7 @@ const routes = (0, _express.Router)();
 
 routes.get('/:id', TeamController.getTeamById);
 
-routes.post('/createTeam', _auth.authJwt, (0, _expressValidation2.default)(_team3.default.createTeam), TeamController.createTeam);
+routes.post('/createTeam', _auth.creatorJwt, (0, _expressValidation2.default)(_team3.default.createTeam), TeamController.createTeam);
 
 exports.default = routes;
 
@@ -1063,23 +1078,23 @@ exports.updateTournament = updateTournament;
 exports.deleteTournament = deleteTournament;
 exports.getTournamentsByUserId = getTournamentsByUserId;
 
-var _httpStatus = __webpack_require__(3);
+var _httpStatus = __webpack_require__(4);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
-var _tournament = __webpack_require__(6);
+var _tournament = __webpack_require__(7);
 
 var _tournament2 = _interopRequireDefault(_tournament);
 
-var _user = __webpack_require__(7);
+var _user = __webpack_require__(8);
 
 var _user2 = _interopRequireDefault(_user);
 
-var _match = __webpack_require__(4);
+var _match = __webpack_require__(5);
 
 var _match2 = _interopRequireDefault(_match);
 
-__webpack_require__(5);
+__webpack_require__(6);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1182,7 +1197,7 @@ var _tournament = __webpack_require__(22);
 
 var tournamentController = _interopRequireWildcard(_tournament);
 
-var _auth = __webpack_require__(8);
+var _auth = __webpack_require__(3);
 
 var _tournament2 = __webpack_require__(24);
 
@@ -1259,11 +1274,11 @@ exports.getUser = getUser;
 exports.updateUser = updateUser;
 exports.deleteUser = deleteUser;
 
-var _httpStatus = __webpack_require__(3);
+var _httpStatus = __webpack_require__(4);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
-var _user = __webpack_require__(7);
+var _user = __webpack_require__(8);
 
 var _user2 = _interopRequireDefault(_user);
 
@@ -1333,7 +1348,7 @@ var _expressValidation = __webpack_require__(9);
 
 var _expressValidation2 = _interopRequireDefault(_expressValidation);
 
-var _auth = __webpack_require__(8);
+var _auth = __webpack_require__(3);
 
 var _user = __webpack_require__(25);
 

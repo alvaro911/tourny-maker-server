@@ -107,7 +107,7 @@ TournamentSchema.methods = {
 
         round.forEach(
           async game =>
-            await createMatch(week, game, this._id),
+            await createMatch(week, game, this._id, {$push:{matches: game}}),
         );
       });
 
