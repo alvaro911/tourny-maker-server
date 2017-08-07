@@ -49,8 +49,9 @@ MatchSchema.methods = {
       goalsA: this.goalsA,
       teamB: this.teamB,
       goalsB: this.goalsB,
-      tournament_id: this.tournament_id,
+      tournamentId: this.tournamentId,
       round: this.round,
+      fullTime: this.fullTime
     };
   },
 };
