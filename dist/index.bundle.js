@@ -254,34 +254,42 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const MatchSchema = new _mongoose.Schema({
   round: {
-    type: Number
+    type: Number,
+    required: false
   },
   teamA: {
     type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Team'
+    ref: 'Team',
+    required: false
   },
   goalsA: {
     type: Number,
-    default: 0
+    default: 0,
+    required: false
   },
   teamB: {
     type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Team'
+    ref: 'Team',
+    required: false
   },
   goalsB: {
     type: Number,
-    default: 0
+    default: 0,
+    required: false
   },
   fullTime: {
     type: Boolean,
-    default: false
+    default: false,
+    required: false
   },
   matches: {
-    type: _mongoose.Schema.Types.Mixed
+    type: _mongoose.Schema.Types.Mixed,
+    required: false
   },
   tournamentId: {
     type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Tournament'
+    ref: 'Tournament',
+    required: false
   }
 });
 
@@ -884,7 +892,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 async function matchById(req, res) {
   try {
-    const matchId = await _match2.default.findById(req.params.id);
+    const matchId = await _match2.default.findById(req.params.id).populate('teamA').populate('teamB');
     return res.status(_httpStatus2.default.OK).json(matchId);
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
@@ -902,14 +910,17 @@ async function matchResult(req, res) {
     }, { new: true });
     if (goalsA > goalsB) {
       await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 3, totalGoals: goalsA } }, { new: true });
+      await _team2.default.findByIdAndUpdate(teamB, { $inc: { totalGoals: goalsB } }, { new: true });
     } else if (goalsA < goalsB) {
       await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 3, totalGoals: goalsB } }, { new: true });
+      await _team2.default.findByIdAndUpdate(teamA, { $inc: { totalGoals: goalsA } }, { new: true });
     } else {
       await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 1, totalGoals: goalsA } }, { new: true });
       await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 1, totalGoals: goalsB } }, { new: true });
     }
     return res.status(_httpStatus2.default.OK).json(match);
   } catch (e) {
+    console.log(e);
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
 }
@@ -946,7 +957,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 const routes = (0, _express.Router)();
 
-routes.get('/:id', _auth.authJwt, MatchController.matchById);
+routes.get('/match/:id', _auth.authJwt, MatchController.matchById);
 
 routes.patch('/:id', _auth.authJwt, MatchController.matchResult);
 

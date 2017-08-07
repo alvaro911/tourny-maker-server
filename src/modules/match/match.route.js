@@ -5,7 +5,7 @@ import { authJwt } from '../../services/auth.services'
 
 const routes = Router();
 
-routes.get('/:id', authJwt, MatchController.matchById);
+routes.get('/match/:id', authJwt, MatchController.matchById);
 
 routes.patch('/:id', authJwt, MatchController.matchResult);
 
