@@ -4,7 +4,7 @@ import validate from 'express-validation';
 import * as tournamentController from './tournament.controller';
 import {
   authJwt,
-  creatorJwt,
+  creatorIsRequired
 } from '../../services/auth.services';
 import tournamentValidation from './tournament.validator';
 
@@ -12,14 +12,16 @@ const routes = Router();
 
 routes.post(
   '/createTournament',
-  creatorJwt,
+  authJwt,
+  creatorIsRequired,
   validate(tournamentValidation.createTournament),
   tournamentController.createTournament,
 );
 
 routes.post(
   '/:id',
-  creatorJwt,
+  authJwt,
+  creatorIsRequired,
   tournamentController.createMatches,
 );
 
@@ -37,19 +39,22 @@ routes.get(
 
 routes.get(
   '/tournamentId/:id',
-  creatorJwt,
+  authJwt,
+  creatorIsRequired,
   tournamentController.getTournamentsByUserId,
 );
 
 routes.patch(
   '/:id',
-  creatorJwt,
+  authJwt,
+  creatorIsRequired,
   tournamentController.updateTournament,
 );
 
 routes.delete(
   '/:id',
-  creatorJwt,
+  authJwt,
+  creatorIsRequired,
   tournamentController.deleteTournament,
 );
 

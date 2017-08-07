@@ -129,7 +129,8 @@ exports.default = Object.assign({}, defaultConfig, envConfig(process.env.NODE_EN
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.creatorJwt = exports.authJwt = exports.authLocal = undefined;
+exports.authJwt = exports.authLocal = undefined;
+exports.creatorIsRequired = creatorIsRequired;
 
 var _passport = __webpack_require__(12);
 
@@ -189,23 +190,26 @@ const jwtStrategy = new _passportJwt.Strategy(jwtOptions, async (payload, done) 
   }
 });
 
-const creatorStrategy = new _passportJwt.Strategy(jwtOptions, async (payload, done) => {
-  try {
-    const user = await _user2.default.findById(payload._id);
-
-    if (!user || user.role !== 'CREATOR') {
-      return done(null, false);
-    }
-
-    return done(null, user);
-  } catch (e) {
-    return done(e, false);
-  }
-});
+// const creatorStrategy = new JWTStrategy(
+//   jwtOptions,
+//   async (payload, done) => {
+//     try {
+//       const user = await User.findById(payload._id);
+//
+//       if (!user || user.role !== 'CREATOR') {
+//         return done(null, false);
+//       }
+//
+//       return done(null, user);
+//     } catch (e) {
+//       return done(e, false);
+//     }
+//   },
+// );
 
 _passport2.default.use(localStg);
 _passport2.default.use(jwtStrategy);
-_passport2.default.use(creatorStrategy);
+// passport.use(creatorStrategy);
 
 const authLocal = exports.authLocal = _passport2.default.authenticate('local', {
   session: false
@@ -213,9 +217,17 @@ const authLocal = exports.authLocal = _passport2.default.authenticate('local', {
 const authJwt = exports.authJwt = _passport2.default.authenticate('jwt', {
   session: false
 });
-const creatorJwt = exports.creatorJwt = _passport2.default.authenticate('jwt', {
-  session: false
-});
+// export const creatorJwt = passport.authenticate('jwt', {
+//   session: false,
+// });
+
+function creatorIsRequired(req, res, next) {
+  if (!req.user || req.user.role !== 'CREATOR') {
+    throw new Error('Unauthorized');
+  }
+
+  return next();
+}
 
 /***/ }),
 /* 4 */
@@ -281,7 +293,8 @@ MatchSchema.methods = {
       goalsA: this.goalsA,
       teamB: this.teamB,
       goalsB: this.goalsB,
-      tournament_id: this.tournament_id
+      tournament_id: this.tournament_id,
+      round: this.round
     };
   }
 };
@@ -341,10 +354,6 @@ const TeamSchema = new _mongoose.Schema({
   totalGoals: {
     type: Number,
     default: 0
-  },
-  position: {
-    type: Number,
-    default: 1
   }
 }, { timeStamps: true });
 
@@ -355,7 +364,8 @@ TeamSchema.methods = {
       teamName: this.teamName,
       players: this.players,
       points: this.points,
-      gameResult: this.gameResult
+      totalGoals: this.totalGoals,
+      tournament: this.tournament
     };
   }
 };
@@ -608,7 +618,8 @@ UserSchema.methods = {
       token: `JWT ${this.createToken()}`,
       email: this.email,
       firstName: this.firstName,
-      lastName: this.lastName
+      lastName: this.lastName,
+      role: this.role
     };
   },
   toJSON() {
@@ -905,7 +916,7 @@ async function matchResult(req, res) {
 
 async function getMatchesByTournamentId(req, res) {
   try {
-    const matches = await _match2.default.find({ tournamentId: req.params.id });
+    const matches = await _match2.default.find({ tournamentId: req.params.id }).populate('teamA').populate('teamB');
     return res.status(_httpStatus2.default.OK).json(matches);
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
@@ -935,9 +946,9 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 const routes = (0, _express.Router)();
 
-routes.get('/:id', MatchController.matchById);
+routes.get('/:id', _auth.authJwt, MatchController.matchById);
 
-routes.patch('/:id', MatchController.matchResult);
+routes.patch('/:id', _auth.authJwt, MatchController.matchResult);
 
 routes.get('/tournament/:id', _auth.authJwt, MatchController.getMatchesByTournamentId);
 
@@ -1027,9 +1038,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const routes = (0, _express.Router)();
 
-routes.get('/:id', TeamController.getTeamById);
+routes.get('/:id', _auth.authJwt, TeamController.getTeamById);
 
-routes.post('/createTeam', _auth.creatorJwt, (0, _expressValidation2.default)(_team3.default.createTeam), TeamController.createTeam);
+routes.post('/createTeam', _auth.authJwt, (0, _expressValidation2.default)(_team3.default.createTeam), TeamController.createTeam);
 
 exports.default = routes;
 
@@ -1209,19 +1220,19 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const routes = (0, _express.Router)();
 
-routes.post('/createTournament', _auth.creatorJwt, (0, _expressValidation2.default)(_tournament3.default.createTournament), tournamentController.createTournament);
+routes.post('/createTournament', _auth.authJwt, _auth.creatorIsRequired, (0, _expressValidation2.default)(_tournament3.default.createTournament), tournamentController.createTournament);
 
-routes.post('/:id', _auth.creatorJwt, tournamentController.createMatches);
+routes.post('/:id', _auth.authJwt, _auth.creatorIsRequired, tournamentController.createMatches);
 
 routes.get('/', _auth.authJwt, tournamentController.getTournaments);
 
 routes.get('/:id', _auth.authJwt, tournamentController.getTournamentById);
 
-routes.get('/tournamentId/:id', _auth.creatorJwt, tournamentController.getTournamentsByUserId);
+routes.get('/tournamentId/:id', _auth.authJwt, _auth.creatorIsRequired, tournamentController.getTournamentsByUserId);
 
-routes.patch('/:id', _auth.creatorJwt, tournamentController.updateTournament);
+routes.patch('/:id', _auth.authJwt, _auth.creatorIsRequired, tournamentController.updateTournament);
 
-routes.delete('/:id', _auth.creatorJwt, tournamentController.deleteTournament);
+routes.delete('/:id', _auth.authJwt, _auth.creatorIsRequired, tournamentController.deleteTournament);
 
 exports.default = routes;
 

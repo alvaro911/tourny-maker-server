@@ -94,6 +94,7 @@ UserSchema.methods = {
       email: this.email,
       firstName: this.firstName,
       lastName: this.lastName,
+      role: this.role
     };
   },
   toJSON() {

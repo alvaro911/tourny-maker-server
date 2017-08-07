@@ -2,16 +2,16 @@ import { Router } from 'express';
 import validate from 'express-validation';
 
 import * as TeamController from './team.controller';
-import { creatorJwt } from '../../services/auth.services';
+import { authJwt } from '../../services/auth.services';
 import teamValidator from './team.validator';
 
 const routes = Router();
 
-routes.get('/:id', TeamController.getTeamById);
+routes.get('/:id', authJwt, TeamController.getTeamById);
 
 routes.post(
   '/createTeam',
-  creatorJwt,
+  authJwt,
   validate(teamValidator.createTeam),
   TeamController.createTeam,
 );
