@@ -3,7 +3,7 @@ import HTTPStatus from 'http-status';
 import Tournament from './tournament.model';
 import User from '../user/user.model';
 import MatchModel from '../match/match.model';
-import '../team/team.model';
+import TeamModel from '../team/team.model';
 
 export async function createTournament(req, res) {
   try {
@@ -37,13 +37,16 @@ export async function getTournamentById(req, res) {
       req.params.id,
     )
       .populate('user')
-      .populate('teams')
       .populate('leaderBoard');
+    const teams = await TeamModel.find({
+      tournament:req.params.id
+    }).sort({points: -1, totalGoals: -1})
     const matches = await MatchModel.find({
       tournament_id: req.params.id,
     });
     return res.status(HTTPStatus.OK).json({
       ...tournament.toJSON(),
+      teams,
       matches,
     });
   } catch (e) {

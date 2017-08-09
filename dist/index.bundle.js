@@ -356,6 +356,10 @@ const TeamSchema = new _mongoose.Schema({
     ref: 'Tournament',
     required: true
   },
+  user: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'user'
+  },
   points: {
     type: Number,
     default: 0
@@ -374,14 +378,17 @@ TeamSchema.methods = {
       players: this.players,
       points: this.points,
       totalGoals: this.totalGoals,
-      tournament: this.tournament
+      tournament: this.tournament,
+      user: this.user
     };
   }
 };
 
 TeamSchema.statics = {
-  createTeam(args) {
-    return this.create(Object.assign({}, args));
+  createTeam(args, user) {
+    return this.create(Object.assign({}, args, {
+      user
+    }));
   }
 };
 
@@ -461,10 +468,6 @@ const TournamentSchema = new _mongoose.Schema({
   teams: [{
     type: _mongoose.Schema.Types.ObjectId,
     ref: 'Team'
-  }],
-  matches: [{
-    type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Match'
   }],
   leaderBoard: [{
     type: _mongoose.Schema.Types.ObjectId,
@@ -899,29 +902,29 @@ async function matchById(req, res) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
 }
-// import TournamentModel from '../tournament/tournament.model';
-// import mongoose from 'mongoose';
+
 async function matchResult(req, res) {
   try {
-    const { teamA, teamB, goalsA, goalsB } = req.body;
+    const { teamA, teamB } = req.body;
+    const goalsA = Number(req.body.goalsA);
+    const goalsB = Number(req.body.goalsB);
     const match = await _match2.default.findByIdAndUpdate(req.params.id, {
       goalsA,
       goalsB,
       fullTime: true
     }, { new: true });
     if (goalsA > goalsB) {
-      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 3, totalGoals: goalsA } }, { new: true });
-      await _team2.default.findByIdAndUpdate(teamB, { $inc: { totalGoals: goalsB } }, { new: true });
+      await _team2.default.findById(teamA, { $inc: { points: 3, totalGoals: goalsA } }, { new: true });
+      await _team2.default.findById(teamB, { $inc: { points: 0, totalGoals: goalsB } }, { new: true });
     } else if (goalsA < goalsB) {
-      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 3, totalGoals: goalsB } }, { new: true });
-      await _team2.default.findByIdAndUpdate(teamA, { $inc: { totalGoals: goalsA } }, { new: true });
+      await _team2.default.findById(teamB, { $inc: { points: 3, totalGoals: goalsB } }, { new: true });
+      await _team2.default.findById(teamA, { $inc: { points: 0, totalGoals: goalsA } }, { new: true });
     } else {
-      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 1, totalGoals: goalsA } }, { new: true });
-      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 1, totalGoals: goalsB } }, { new: true });
+      await _team2.default.findById(teamA, { $inc: { points: 1, totalGoals: goalsA } }, { new: true });
+      await _team2.default.findById(teamB, { $inc: { points: 1, totalGoals: goalsB } }, { new: true });
     }
     return res.status(_httpStatus2.default.OK).json(match);
   } catch (e) {
-    console.log(e);
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
 }
@@ -1004,7 +1007,7 @@ async function getTeamById(req, res) {
 
 async function createTeam(req, res) {
   try {
-    const team = await _team2.default.createTeam(req.body);
+    const team = await _team2.default.createTeam(req.body, req.user._id);
     await _tournament2.default.findByIdAndUpdate(req.body.tournament, {
       $push: {
         teams: team,
@@ -1117,7 +1120,9 @@ var _match = __webpack_require__(5);
 
 var _match2 = _interopRequireDefault(_match);
 
-__webpack_require__(6);
+var _team = __webpack_require__(6);
+
+var _team2 = _interopRequireDefault(_team);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1144,11 +1149,15 @@ async function getTournaments(req, res) {
 
 async function getTournamentById(req, res) {
   try {
-    const tournament = await _tournament2.default.findById(req.params.id).populate('user').populate('teams').populate('leaderBoard');
+    const tournament = await _tournament2.default.findById(req.params.id).populate('user').populate('leaderBoard');
+    const teams = await _team2.default.find({
+      tournament: req.params.id
+    }).sort({ points: -1, totalGoals: -1 });
     const matches = await _match2.default.find({
       tournament_id: req.params.id
     });
     return res.status(_httpStatus2.default.OK).json(Object.assign({}, tournament.toJSON(), {
+      teams,
       matches
     }));
   } catch (e) {

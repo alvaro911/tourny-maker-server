@@ -32,6 +32,10 @@ const TeamSchema = new Schema(
       ref: 'Tournament',
       required: true,
     },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'user'
+    },
     points: {
       type: Number,
       default: 0,
@@ -52,15 +56,17 @@ TeamSchema.methods = {
       players: this.players,
       points: this.points,
       totalGoals: this.totalGoals,
-      tournament: this.tournament
+      tournament: this.tournament,
+      user: this.user
     };
   },
 };
 
 TeamSchema.statics = {
-  createTeam(args) {
+  createTeam(args, user) {
     return this.create({
       ...args,
+      user
     });
   },
 };

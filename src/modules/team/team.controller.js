@@ -14,7 +14,7 @@ export async function getTeamById(req, res) {
 
 export async function createTeam(req, res) {
   try {
-    const team = await Team.createTeam(req.body);
+    const team = await Team.createTeam(req.body, req.user._id);
     await Tournament.findByIdAndUpdate(
       req.body.tournament,
       {
