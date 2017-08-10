@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import { passwordReg } from './user.validator';
 import constants from '../../config/constants';
 import TournamentModel from '../tournament/tournament.model';
+import TeamModel from '../team/team.model';
 
 const UserSchema = new Schema(
   {
@@ -68,6 +69,7 @@ UserSchema.pre('save', function(next) {
 
 UserSchema.pre('remove', async function(next) {
   await TournamentModel.remove({ user: this._id });
+  await TeamModel.remove({user: this._id})
   return next();
 });
 

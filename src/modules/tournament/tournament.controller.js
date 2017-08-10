@@ -85,7 +85,10 @@ export async function updateTournament(req, res) {
 
 export async function deleteTournament(req, res) {
   try {
-    await Tournament.findByIdAndRemove(req.params.id);
+    await Tournament.findByIdAndRemove(req.params.id).pre('remove', async function(next){
+      await TeamModel.remove({tournament: this._id})
+      return next()
+    });
     return res.sendStatus(HTTPStatus.OK);
   } catch (e) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);
@@ -100,5 +103,16 @@ export async function getTournamentsByUserId(req, res) {
     return res.status(HTTPStatus.OK).json(tournaments);
   } catch (e) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);
+  }
+}
+
+export async function getTournamentByTeamId(req, res) {
+  try {
+    const tournament = await Tournament.find({
+      teams: req.params.id,
+    }).populate('teams')
+    return res.status(HTTPStatus.OK).json(tournament)
+  } catch (e) {
+    return res.status(HTTPStatus.BAD_REQUEST).json(e)
   }
 }

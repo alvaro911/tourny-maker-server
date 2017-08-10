@@ -28,7 +28,15 @@ export async function createTeam(req, res) {
       .status(HTTPStatus.CREATED)
       .json(team.toJSON());
   } catch (e) {
-    console.log(e)
+    return res.status(HTTPStatus.BAD_REQUEST).json(e);
+  }
+}
+
+export async function getTeamByUserId(req, res) {
+  try {
+    const team = await Team.find({user: req.params.id})
+    return res.status(HTTPStatus.OK).json(team)
+  } catch (e) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);
   }
 }

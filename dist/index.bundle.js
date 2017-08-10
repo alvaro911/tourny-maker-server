@@ -546,6 +546,10 @@ var _tournament = __webpack_require__(7);
 
 var _tournament2 = _interopRequireDefault(_tournament);
 
+var _team = __webpack_require__(6);
+
+var _team2 = _interopRequireDefault(_team);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const UserSchema = new _mongoose.Schema({
@@ -606,6 +610,7 @@ UserSchema.pre('save', function (next) {
 
 UserSchema.pre('remove', async function (next) {
   await _tournament2.default.remove({ user: this._id });
+  await _team2.default.remove({ user: this._id });
   return next();
 });
 
@@ -979,6 +984,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getTeamById = getTeamById;
 exports.createTeam = createTeam;
+exports.getTeamByUserId = getTeamByUserId;
 
 var _httpStatus = __webpack_require__(4);
 
@@ -1014,7 +1020,15 @@ async function createTeam(req, res) {
     });
     return res.status(_httpStatus2.default.CREATED).json(team.toJSON());
   } catch (e) {
-    console.log(e);
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
+  }
+}
+
+async function getTeamByUserId(req, res) {
+  try {
+    const team = await _team2.default.find({ user: req.params.id });
+    return res.status(_httpStatus2.default.OK).json(team);
+  } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
 }
@@ -1053,6 +1067,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 const routes = (0, _express.Router)();
 
 routes.get('/:id', _auth.authJwt, TeamController.getTeamById);
+
+routes.get('/user/:id', _auth.authJwt, TeamController.getTeamByUserId);
 
 routes.post('/createTeam', _auth.authJwt, (0, _expressValidation2.default)(_team3.default.createTeam), TeamController.createTeam);
 
@@ -1102,6 +1118,7 @@ exports.createMatches = createMatches;
 exports.updateTournament = updateTournament;
 exports.deleteTournament = deleteTournament;
 exports.getTournamentsByUserId = getTournamentsByUserId;
+exports.getTournamentByTeamId = getTournamentByTeamId;
 
 var _httpStatus = __webpack_require__(4);
 
@@ -1189,7 +1206,10 @@ async function updateTournament(req, res) {
 
 async function deleteTournament(req, res) {
   try {
-    await _tournament2.default.findByIdAndRemove(req.params.id);
+    await _tournament2.default.findByIdAndRemove(req.params.id).pre('remove', async function (next) {
+      await _team2.default.remove({ tournament: this._id });
+      return next();
+    });
     return res.sendStatus(_httpStatus2.default.OK);
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
@@ -1202,6 +1222,17 @@ async function getTournamentsByUserId(req, res) {
       user: req.params.id
     });
     return res.status(_httpStatus2.default.OK).json(tournaments);
+  } catch (e) {
+    return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
+  }
+}
+
+async function getTournamentByTeamId(req, res) {
+  try {
+    const tournament = await _tournament2.default.find({
+      teams: req.params.id
+    }).populate('teams');
+    return res.status(_httpStatus2.default.OK).json(tournament);
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
@@ -1253,6 +1284,8 @@ routes.get('/tournamentId/:id', _auth.authJwt, _auth.creatorIsRequired, tourname
 routes.patch('/:id', _auth.authJwt, _auth.creatorIsRequired, tournamentController.updateTournament);
 
 routes.delete('/:id', _auth.authJwt, _auth.creatorIsRequired, tournamentController.deleteTournament);
+
+routes.get('/team/:id', _auth.authJwt, tournamentController.getTournamentByTeamId);
 
 exports.default = routes;
 

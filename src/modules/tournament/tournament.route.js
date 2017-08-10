@@ -58,4 +58,6 @@ routes.delete(
   tournamentController.deleteTournament,
 );
 
+routes.get('/team/:id', authJwt, tournamentController.getTournamentByTeamId)
+
 export default routes;
