@@ -40,7 +40,7 @@ export async function getTournamentById(req, res) {
       .populate('leaderBoard');
     const teams = await TeamModel.find({
       tournament:req.params.id
-    }).sort({points: -1, totalGoals: -1})
+    }).sort({points: -1})
     const matches = await MatchModel.find({
       tournament_id: req.params.id,
     });

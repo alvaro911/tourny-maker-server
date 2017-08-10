@@ -29,34 +29,34 @@ export async function matchResult(req, res) {
       { new: true },
     );
     if (goalsA > goalsB) {
-      await TeamModel.findById(
+      await TeamModel.findByIdAndUpdate(
         teamA,
         { $inc: { points: 3, totalGoals: goalsA } },
         { new: true },
       );
-      await TeamModel.findById(
+      await TeamModel.findByIdAndUpdate(
         teamB,
-        { $inc: { points: 0, totalGoals: goalsB } },
+        { $inc: { totalGoals: goalsB } },
         { new: true}
       )
     } else if (goalsA < goalsB) {
-      await TeamModel.findById(
+      await TeamModel.findByIdAndUpdate(
         teamB,
         { $inc: { points: 3, totalGoals: goalsB } },
         { new: true },
       );
-      await TeamModel.findById(
+      await TeamModel.findByIdAndUpdate(
         teamA,
-        { $inc: { points: 0, totalGoals: goalsA } },
+        { $inc: { totalGoals: goalsA } },
         { new: true}
-      )
+      );
     } else {
-      await TeamModel.findById(
+      await TeamModel.findByIdAndUpdate(
         teamA,
         { $inc: { points: 1, totalGoals: goalsA } },
         { new: true },
       );
-      await TeamModel.findById(
+      await TeamModel.findByIdAndUpdate(
         teamB,
         { $inc: { points: 1, totalGoals: goalsB } },
         { new: true },
@@ -70,7 +70,10 @@ export async function matchResult(req, res) {
 
 export async function getMatchesByTournamentId(req, res) {
   try {
-    const matches = await MatchModel.find({ tournamentId: req.params.id }).populate('teamA').populate('teamB')
+    const matches = await MatchModel.find({ tournamentId: req.params.id })
+    .sort({round: 1})
+    .populate('teamA')
+    .populate('teamB')
     return res.status(HTTPStatus.OK).json(matches)
   } catch (e) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);

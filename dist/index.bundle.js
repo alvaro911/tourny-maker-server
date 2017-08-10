@@ -99,7 +99,8 @@ const testConfig = {
 };
 
 const prodConfig = {
-  MONGO_URL: 'mongodb://localhost/tourny-maker-prod'
+  MONGO_URL: 'mongodb://alvaro911:Password1@ds141118.mlab.com:41118/tournaments',
+  JWT_SECRET: 'iWannaRock'
 };
 
 const defaultConfig = {
@@ -209,7 +210,6 @@ const jwtStrategy = new _passportJwt.Strategy(jwtOptions, async (payload, done) 
 
 _passport2.default.use(localStg);
 _passport2.default.use(jwtStrategy);
-// passport.use(creatorStrategy);
 
 const authLocal = exports.authLocal = _passport2.default.authenticate('local', {
   session: false
@@ -331,7 +331,6 @@ const TeamSchema = new _mongoose.Schema({
   teamName: {
     type: String,
     trim: true,
-    unique: true,
     required: [true, 'Team name is required']
   },
   players: [{
@@ -343,8 +342,7 @@ const TeamSchema = new _mongoose.Schema({
     playerNumber: {
       type: Number,
       trim: true,
-      required: [true, 'Need a player number'],
-      unique: true
+      required: [true, 'Need a player number']
     }
   }],
   player: {
@@ -914,14 +912,14 @@ async function matchResult(req, res) {
       fullTime: true
     }, { new: true });
     if (goalsA > goalsB) {
-      await _team2.default.findById(teamA, { $inc: { points: 3, totalGoals: goalsA } }, { new: true });
-      await _team2.default.findById(teamB, { $inc: { points: 0, totalGoals: goalsB } }, { new: true });
+      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 3, totalGoals: goalsA } }, { new: true });
+      await _team2.default.findByIdAndUpdate(teamB, { $inc: { totalGoals: goalsB } }, { new: true });
     } else if (goalsA < goalsB) {
-      await _team2.default.findById(teamB, { $inc: { points: 3, totalGoals: goalsB } }, { new: true });
-      await _team2.default.findById(teamA, { $inc: { points: 0, totalGoals: goalsA } }, { new: true });
+      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 3, totalGoals: goalsB } }, { new: true });
+      await _team2.default.findByIdAndUpdate(teamA, { $inc: { totalGoals: goalsA } }, { new: true });
     } else {
-      await _team2.default.findById(teamA, { $inc: { points: 1, totalGoals: goalsA } }, { new: true });
-      await _team2.default.findById(teamB, { $inc: { points: 1, totalGoals: goalsB } }, { new: true });
+      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 1, totalGoals: goalsA } }, { new: true });
+      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 1, totalGoals: goalsB } }, { new: true });
     }
     return res.status(_httpStatus2.default.OK).json(match);
   } catch (e) {
@@ -931,7 +929,7 @@ async function matchResult(req, res) {
 
 async function getMatchesByTournamentId(req, res) {
   try {
-    const matches = await _match2.default.find({ tournamentId: req.params.id }).populate('teamA').populate('teamB');
+    const matches = await _match2.default.find({ tournamentId: req.params.id }).sort({ round: 1 }).populate('teamA').populate('teamB');
     return res.status(_httpStatus2.default.OK).json(matches);
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
@@ -1016,6 +1014,7 @@ async function createTeam(req, res) {
     });
     return res.status(_httpStatus2.default.CREATED).json(team.toJSON());
   } catch (e) {
+    console.log(e);
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
 }
@@ -1152,7 +1151,7 @@ async function getTournamentById(req, res) {
     const tournament = await _tournament2.default.findById(req.params.id).populate('user').populate('leaderBoard');
     const teams = await _team2.default.find({
       tournament: req.params.id
-    }).sort({ points: -1, totalGoals: -1 });
+    }).sort({ points: -1 });
     const matches = await _match2.default.find({
       tournament_id: req.params.id
     });

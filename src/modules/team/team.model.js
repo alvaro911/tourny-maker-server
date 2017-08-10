@@ -5,7 +5,6 @@ const TeamSchema = new Schema(
     teamName: {
       type: String,
       trim: true,
-      unique: true,
       required: [true, 'Team name is required'],
     },
     players: [
@@ -19,7 +18,6 @@ const TeamSchema = new Schema(
           type: Number,
           trim: true,
           required: [true, 'Need a player number'],
-          unique: true,
         },
       },
     ],

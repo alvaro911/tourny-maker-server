@@ -73,7 +73,6 @@ const jwtStrategy = new JWTStrategy(
 
 passport.use(localStg);
 passport.use(jwtStrategy);
-// passport.use(creatorStrategy);
 
 export const authLocal = passport.authenticate('local', {
   session: false,

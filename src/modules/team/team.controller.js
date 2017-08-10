@@ -28,6 +28,7 @@ export async function createTeam(req, res) {
       .status(HTTPStatus.CREATED)
       .json(team.toJSON());
   } catch (e) {
+    console.log(e)
     return res.status(HTTPStatus.BAD_REQUEST).json(e);
   }
 }
