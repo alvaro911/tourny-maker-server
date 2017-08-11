@@ -2,6 +2,7 @@ import mongoose, { Schema } from 'mongoose';
 import robin from 'roundrobin';
 
 import MatchModel from '../match/match.model';
+import Team from '../team/team.model';
 
 const TournamentSchema = new Schema(
   {
@@ -82,12 +83,22 @@ TournamentSchema.statics = {
 };
 
 async function createMatch(week, game, tournamentId) {
-  return await MatchModel.create({
+  const m = await MatchModel.create({
     round: week,
     teamA: game[0],
     teamB: game[1],
     tournamentId,
   });
+
+  const teamA = await Team.findById(game[0]);
+  const teamB = await Team.findById(game[1]);
+
+  teamA.matchs.push(m);
+  teamB.matchs.push(m);
+
+  await Promise.all([teamA.save(), teamB.save()]);
+
+  return m;
 }
 
 TournamentSchema.methods = {
