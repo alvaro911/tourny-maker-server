@@ -259,8 +259,7 @@ const MatchSchema = new _mongoose.Schema({
   },
   teamA: {
     type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Team',
-    required: false
+    ref: 'Team'
   },
   goalsA: {
     type: Number,
@@ -269,8 +268,15 @@ const MatchSchema = new _mongoose.Schema({
   },
   teamB: {
     type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Team',
-    required: false
+    ref: 'Team'
+  },
+  teamAPoints: {
+    type: Number,
+    default: 0
+  },
+  teamBPoints: {
+    type: Number,
+    default: 0
   },
   goalsB: {
     type: Number,
@@ -325,6 +331,10 @@ var _mongoose = __webpack_require__(1);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
+var _match = __webpack_require__(5);
+
+var _match2 = _interopRequireDefault(_match);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const TeamSchema = new _mongoose.Schema({
@@ -365,10 +375,35 @@ const TeamSchema = new _mongoose.Schema({
   totalGoals: {
     type: Number,
     default: 0
-  }
+  },
+  matchs: [{
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Match'
+  }]
 }, { timeStamps: true });
 
 TeamSchema.methods = {
+  async getTournamentTotalPoints() {
+    const matches = await _match2.default.find({ _id: { $in: this.matchs } });
+
+    return matches.reduce((obj, m) => {
+      const u = obj;
+      const t = this._id === m.teamA ? 'teamA' : 'teamB';
+
+      if (t === 'teamA') {
+        u.totalPoints += m.teamAPoints;
+        u.totalGoals += m.goalsA;
+      } else {
+        u.totalPoints += m.teamBPoints;
+        u.totalGoals += m.goalsB;
+      }
+
+      return u;
+    }, {
+      totalPoints: 0,
+      totalGoals: 0
+    });
+  },
   toJSON() {
     return {
       _id: this._id,
@@ -414,6 +449,10 @@ var _roundrobin2 = _interopRequireDefault(_roundrobin);
 var _match = __webpack_require__(5);
 
 var _match2 = _interopRequireDefault(_match);
+
+var _team = __webpack_require__(6);
+
+var _team2 = _interopRequireDefault(_team);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -482,12 +521,22 @@ TournamentSchema.statics = {
 };
 
 async function createMatch(week, game, tournamentId) {
-  return await _match2.default.create({
+  const m = await _match2.default.create({
     round: week,
     teamA: game[0],
     teamB: game[1],
     tournamentId
   });
+
+  const teamA = await _team2.default.findById(game[0]);
+  const teamB = await _team2.default.findById(game[1]);
+
+  teamA.matchs.push(m);
+  teamB.matchs.push(m);
+
+  await Promise.all([teamA.save(), teamB.save()]);
+
+  return m;
 }
 
 TournamentSchema.methods = {
@@ -715,9 +764,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 _mongoose2.default.Promise = global.Promise;
 
 try {
-  _mongoose2.default.connect(_constants2.default.MONGO_URL);
+  _mongoose2.default.connect(_constants2.default.MONGO_URL, {
+    useMongoClient: true
+  });
 } catch (err) {
-  _mongoose2.default.createConnection(_constants2.default.MONGO_URL);
+  _mongoose2.default.createConnection(_constants2.default.MONGO_URL, {
+    useMongoClient: true
+  });
 }
 
 _mongoose2.default.connection.once('open', () => console.log('MongoDB running')).on('error', e => {
@@ -903,25 +956,46 @@ async function matchById(req, res) {
 
 async function matchResult(req, res) {
   try {
-    const { teamA, teamB } = req.body;
+    // const { teamA, teamB } = req.body;
     const goalsA = Number(req.body.goalsA);
     const goalsB = Number(req.body.goalsB);
-    const match = await _match2.default.findByIdAndUpdate(req.params.id, {
-      goalsA,
-      goalsB,
-      fullTime: true
-    }, { new: true });
+    const match = await _match2.default.findById(req.params.id);
+    // Find both team and make a variables with it
+    const teamA = await _team2.default.findById(req.body.teamA);
+    const teamB = await _team2.default.findById(req.body.teamB);
+
+    match.teamAPoints = 0;
+    match.teamAPoints = 0;
+    match.goalsA = 0;
+    match.goalsB = 0;
+
     if (goalsA > goalsB) {
-      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 3, totalGoals: goalsA } }, { new: true });
-      await _team2.default.findByIdAndUpdate(teamB, { $inc: { totalGoals: goalsB } }, { new: true });
+      // If teamA more points increment 3 points
+      match.teamAPoints += 3;
     } else if (goalsA < goalsB) {
-      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 3, totalGoals: goalsB } }, { new: true });
-      await _team2.default.findByIdAndUpdate(teamA, { $inc: { totalGoals: goalsA } }, { new: true });
+      // If teamB more points increment 3 points
+      match.teamBPoints += 3;
     } else {
-      await _team2.default.findByIdAndUpdate(teamA, { $inc: { points: 1, totalGoals: goalsA } }, { new: true });
-      await _team2.default.findByIdAndUpdate(teamB, { $inc: { points: 1, totalGoals: goalsB } }, { new: true });
+      // If match null both get 1 point
+      match.teamAPoints += 1;
+      match.teamBPoints += 1;
     }
-    return res.status(_httpStatus2.default.OK).json(match);
+
+    match.fullTime = true;
+    match.goalsA = goalsA;
+    match.goalsB = goalsB;
+
+    // Wait both save promise before continue
+    await match.save();
+
+    const pointTeamA = await teamA.getTournamentTotalPoints();
+    const pointTeamB = await teamB.getTournamentTotalPoints();
+
+    return res.status(_httpStatus2.default.OK).json({
+      match,
+      teamA: pointTeamA,
+      teamB: pointTeamB
+    });
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }

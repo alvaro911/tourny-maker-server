@@ -7,9 +7,13 @@ import constants from './constants';
 mongoose.Promise = global.Promise;
 
 try {
-  mongoose.connect(constants.MONGO_URL);
+  mongoose.connect(constants.MONGO_URL, {
+    useMongoClient: true,
+  });
 } catch (err) {
-  mongoose.createConnection(constants.MONGO_URL);
+  mongoose.createConnection(constants.MONGO_URL, {
+    useMongoClient: true,
+  });
 }
 
 mongoose.connection
