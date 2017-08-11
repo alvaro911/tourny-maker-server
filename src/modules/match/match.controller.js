@@ -21,11 +21,11 @@ export async function matchResult(req, res) {
     const goalsB = Number(req.body.goalsB);
     const match = await MatchModel.findById(req.params.id);
     // Find both team and make a variables with it
-    const teamA = await TeamModel.findById(req.body.teamA);
-    const teamB = await TeamModel.findById(req.body.teamB);
+    const teamA = await TeamModel.findById(match.teamA);
+    const teamB = await TeamModel.findById(match.teamB);
 
     match.teamAPoints = 0;
-    match.teamAPoints = 0;
+    match.teamBPoints = 0;
     match.goalsA = 0;
     match.goalsB = 0;
 

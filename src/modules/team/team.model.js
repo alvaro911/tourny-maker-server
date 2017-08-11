@@ -58,7 +58,7 @@ TeamSchema.methods = {
 
     return matches.reduce((obj, m) => {
       const u = obj;
-      const t = this._id === m.teamA ? 'teamA' : 'teamB';
+      const t = this._id.equals(m.teamA) ? 'teamA' : 'teamB';
 
       if (t === 'teamA') {
         u.totalPoints += m.teamAPoints

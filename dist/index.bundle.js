@@ -388,7 +388,7 @@ TeamSchema.methods = {
 
     return matches.reduce((obj, m) => {
       const u = obj;
-      const t = this._id === m.teamA ? 'teamA' : 'teamB';
+      const t = this._id.equals(m.teamA) ? 'teamA' : 'teamB';
 
       if (t === 'teamA') {
         u.totalPoints += m.teamAPoints;
@@ -966,11 +966,11 @@ async function matchResult(req, res) {
     const goalsB = Number(req.body.goalsB);
     const match = await _match2.default.findById(req.params.id);
     // Find both team and make a variables with it
-    const teamA = await _team2.default.findById(req.body.teamA);
-    const teamB = await _team2.default.findById(req.body.teamB);
+    const teamA = await _team2.default.findById(match.teamA);
+    const teamB = await _team2.default.findById(match.teamB);
 
     match.teamAPoints = 0;
-    match.teamAPoints = 0;
+    match.teamBPoints = 0;
     match.goalsA = 0;
     match.goalsB = 0;
 
