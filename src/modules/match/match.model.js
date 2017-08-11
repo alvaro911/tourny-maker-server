@@ -8,7 +8,6 @@ const MatchSchema = new Schema({
   teamA: {
     type: Schema.Types.ObjectId,
     ref: 'Team',
-    required: false
   },
   goalsA: {
     type: Number,
@@ -18,7 +17,14 @@ const MatchSchema = new Schema({
   teamB: {
     type: Schema.Types.ObjectId,
     ref: 'Team',
-    required: false
+  },
+  teamAPoints: {
+    type: Number,
+    default: 0
+  },
+  teamBPoints: {
+    type: Number,
+    default: 0
   },
   goalsB: {
     type: Number,

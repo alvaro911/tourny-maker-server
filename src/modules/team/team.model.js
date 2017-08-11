@@ -1,5 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 
+import Match from '../match/match.model';
+
 const TeamSchema = new Schema(
   {
     teamName: {
@@ -42,11 +44,36 @@ const TeamSchema = new Schema(
       type: Number,
       default: 0,
     },
+    matchs: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Match'
+    }]
   },
   { timeStamps: true },
 );
 
 TeamSchema.methods = {
+  async getTournamentTotalPoints() {
+    const matches = await Match.find({ _id: { $in: this.matchs }});
+
+    return matches.reduce((obj, m) => {
+      const u = obj;
+      const t = this._id === m.teamA ? 'teamA' : 'teamB';
+
+      if (t === 'teamA') {
+        u.totalPoints += m.teamAPoints
+        u.totalGoals += m.goalsA;
+      } else {
+        u.totalPoints += m.teamBPoints
+        u.totalGoals += m.goalsB;
+      }
+
+      return u;
+    }, {
+      totalPoints: 0,
+      totalGoals: 0
+    })
+  },
   toJSON() {
     return {
       _id: this._id,
