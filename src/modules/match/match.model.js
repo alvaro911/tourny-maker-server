@@ -57,7 +57,9 @@ MatchSchema.methods = {
       goalsB: this.goalsB,
       tournamentId: this.tournamentId,
       round: this.round,
-      fullTime: this.fullTime
+      fullTime: this.fullTime,
+      teamAPoints: this.teamAPoints,
+      teamBPoints: this.teamBPoints,
     };
   },
 };

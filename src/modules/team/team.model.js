@@ -36,14 +36,6 @@ const TeamSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'user'
     },
-    points: {
-      type: Number,
-      default: 0,
-    },
-    totalGoals: {
-      type: Number,
-      default: 0,
-    },
     matchs: [{
       type: Schema.Types.ObjectId,
       ref: 'Match'
@@ -55,7 +47,6 @@ const TeamSchema = new Schema(
 TeamSchema.methods = {
   async getTournamentTotalPoints() {
     const matches = await Match.find({ _id: { $in: this.matchs }});
-
     return matches.reduce((obj, m) => {
       const u = obj;
       const t = this._id.equals(m.teamA) ? 'teamA' : 'teamB';
@@ -70,6 +61,8 @@ TeamSchema.methods = {
 
       return u;
     }, {
+      teamId: this._id,
+      teamName: this.teamName,
       totalPoints: 0,
       totalGoals: 0
     })
@@ -82,7 +75,8 @@ TeamSchema.methods = {
       points: this.points,
       totalGoals: this.totalGoals,
       tournament: this.tournament,
-      user: this.user
+      user: this.user,
+      matchs: this.matchs
     };
   },
 };

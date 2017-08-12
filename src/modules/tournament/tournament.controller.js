@@ -40,14 +40,25 @@ export async function getTournamentById(req, res) {
       .populate('leaderBoard');
     const teams = await TeamModel.find({
       tournament:req.params.id
-    }).sort({points: -1})
+    })
     const matches = await MatchModel.find({
-      tournament_id: req.params.id,
-    });
+      tournamentId: req.params.id,
+    }).populate('teamA').populate('teamB');
+    const pointsArr = []
+    for(let i = 0; i < teams.length; i++){
+      const team = await TeamModel.findById(teams[i])
+      const info = await team.getTournamentTotalPoints()
+      pointsArr.push(info)
+    }
+    pointsArr.sort((a, b) => (
+      (a.points === b.points) ? b.totalGoals - a.totalGoals : b.points - a.points
+    ))
+    // console.log('I\'ll kill you motherfucker',pointsArr);
     return res.status(HTTPStatus.OK).json({
       ...tournament.toJSON(),
       teams,
       matches,
+      pointsArr
     });
   } catch (e) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);

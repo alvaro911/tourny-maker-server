@@ -63,6 +63,12 @@ const TournamentSchema = new Schema(
         ref: 'Team',
       },
     ],
+    matches: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Match'
+      }
+    ],
     leaderBoard: [
       {
         type: Schema.Types.ObjectId,

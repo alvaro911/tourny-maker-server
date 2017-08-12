@@ -16,7 +16,6 @@ export async function matchById(req, res) {
 
 export async function matchResult(req, res) {
   try {
-    // const { teamA, teamB } = req.body;
     const goalsA = Number(req.body.goalsA);
     const goalsB = Number(req.body.goalsB);
     const match = await MatchModel.findById(req.params.id);
@@ -24,16 +23,17 @@ export async function matchResult(req, res) {
     const teamA = await TeamModel.findById(match.teamA);
     const teamB = await TeamModel.findById(match.teamB);
 
+
     match.teamAPoints = 0;
     match.teamBPoints = 0;
     match.goalsA = 0;
     match.goalsB = 0;
 
     if (goalsA > goalsB) {
-      // If teamA more points increment 3 points
+      // If teamA more goals increment 3 points
       match.teamAPoints += 3;
     } else if (goalsA < goalsB) {
-      // If teamB more points increment 3 points
+      // If teamB more goals increment 3 points
       match.teamBPoints += 3;
     } else {
       // If match null both get 1 point

@@ -75,12 +75,117 @@ module.exports = require("express");
 
 /***/ }),
 /* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _mongoose = __webpack_require__(2);
+
+var _mongoose2 = _interopRequireDefault(_mongoose);
+
+var _match = __webpack_require__(4);
+
+var _match2 = _interopRequireDefault(_match);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const TeamSchema = new _mongoose.Schema({
+  teamName: {
+    type: String,
+    trim: true,
+    required: [true, 'Team name is required']
+  },
+  players: [{
+    playerName: {
+      type: String,
+      trim: true,
+      required: [true, 'Need a player name']
+    },
+    playerNumber: {
+      type: Number,
+      trim: true,
+      required: [true, 'Need a player number']
+    }
+  }],
+  player: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Player'
+  },
+  tournament: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Tournament',
+    required: true
+  },
+  user: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'user'
+  },
+  matchs: [{
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Match'
+  }]
+}, { timeStamps: true });
+
+TeamSchema.methods = {
+  async getTournamentTotalPoints() {
+    const matches = await _match2.default.find({ _id: { $in: this.matchs } });
+    return matches.reduce((obj, m) => {
+      const u = obj;
+      const t = this._id.equals(m.teamA) ? 'teamA' : 'teamB';
+
+      if (t === 'teamA') {
+        u.totalPoints += m.teamAPoints;
+        u.totalGoals += m.goalsA;
+      } else {
+        u.totalPoints += m.teamBPoints;
+        u.totalGoals += m.goalsB;
+      }
+
+      return u;
+    }, {
+      teamId: this._id,
+      teamName: this.teamName,
+      totalPoints: 0,
+      totalGoals: 0
+    });
+  },
+  toJSON() {
+    return {
+      _id: this._id,
+      teamName: this.teamName,
+      players: this.players,
+      points: this.points,
+      totalGoals: this.totalGoals,
+      tournament: this.tournament,
+      user: this.user,
+      matchs: this.matchs
+    };
+  }
+};
+
+TeamSchema.statics = {
+  createTeam(args, user) {
+    return this.create(Object.assign({}, args, {
+      user
+    }));
+  }
+};
+
+exports.default = _mongoose2.default.model('Team', TeamSchema);
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports) {
 
 module.exports = require("mongoose");
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -121,7 +226,90 @@ function envConfig(env) {
 exports.default = Object.assign({}, defaultConfig, envConfig(process.env.NODE_ENV));
 
 /***/ }),
-/* 3 */
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _mongoose = __webpack_require__(2);
+
+var _mongoose2 = _interopRequireDefault(_mongoose);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const MatchSchema = new _mongoose.Schema({
+  round: {
+    type: Number,
+    required: false
+  },
+  teamA: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Team'
+  },
+  goalsA: {
+    type: Number,
+    default: 0,
+    required: false
+  },
+  teamB: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Team'
+  },
+  teamAPoints: {
+    type: Number,
+    default: 0
+  },
+  teamBPoints: {
+    type: Number,
+    default: 0
+  },
+  goalsB: {
+    type: Number,
+    default: 0,
+    required: false
+  },
+  fullTime: {
+    type: Boolean,
+    default: false,
+    required: false
+  },
+  matches: {
+    type: _mongoose.Schema.Types.Mixed,
+    required: false
+  },
+  tournamentId: {
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Tournament',
+    required: false
+  }
+});
+
+MatchSchema.methods = {
+  toJSON() {
+    return {
+      _id: this._id,
+      teamA: this.teamA,
+      goalsA: this.goalsA,
+      teamB: this.teamB,
+      goalsB: this.goalsB,
+      tournamentId: this.tournamentId,
+      round: this.round,
+      fullTime: this.fullTime,
+      teamAPoints: this.teamAPoints,
+      teamBPoints: this.teamBPoints
+    };
+  }
+};
+
+exports.default = _mongoose2.default.model('Match', MatchSchema);
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -147,7 +335,7 @@ var _user = __webpack_require__(8);
 
 var _user2 = _interopRequireDefault(_user);
 
-var _constants = __webpack_require__(2);
+var _constants = __webpack_require__(3);
 
 var _constants2 = _interopRequireDefault(_constants);
 
@@ -230,202 +418,10 @@ function creatorIsRequired(req, res, next) {
 }
 
 /***/ }),
-/* 4 */
+/* 6 */
 /***/ (function(module, exports) {
 
 module.exports = require("http-status");
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _mongoose = __webpack_require__(1);
-
-var _mongoose2 = _interopRequireDefault(_mongoose);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const MatchSchema = new _mongoose.Schema({
-  round: {
-    type: Number,
-    required: false
-  },
-  teamA: {
-    type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Team'
-  },
-  goalsA: {
-    type: Number,
-    default: 0,
-    required: false
-  },
-  teamB: {
-    type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Team'
-  },
-  teamAPoints: {
-    type: Number,
-    default: 0
-  },
-  teamBPoints: {
-    type: Number,
-    default: 0
-  },
-  goalsB: {
-    type: Number,
-    default: 0,
-    required: false
-  },
-  fullTime: {
-    type: Boolean,
-    default: false,
-    required: false
-  },
-  matches: {
-    type: _mongoose.Schema.Types.Mixed,
-    required: false
-  },
-  tournamentId: {
-    type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Tournament',
-    required: false
-  }
-});
-
-MatchSchema.methods = {
-  toJSON() {
-    return {
-      _id: this._id,
-      teamA: this.teamA,
-      goalsA: this.goalsA,
-      teamB: this.teamB,
-      goalsB: this.goalsB,
-      tournamentId: this.tournamentId,
-      round: this.round,
-      fullTime: this.fullTime
-    };
-  }
-};
-
-exports.default = _mongoose2.default.model('Match', MatchSchema);
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _mongoose = __webpack_require__(1);
-
-var _mongoose2 = _interopRequireDefault(_mongoose);
-
-var _match = __webpack_require__(5);
-
-var _match2 = _interopRequireDefault(_match);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const TeamSchema = new _mongoose.Schema({
-  teamName: {
-    type: String,
-    trim: true,
-    required: [true, 'Team name is required']
-  },
-  players: [{
-    playerName: {
-      type: String,
-      trim: true,
-      required: [true, 'Need a player name']
-    },
-    playerNumber: {
-      type: Number,
-      trim: true,
-      required: [true, 'Need a player number']
-    }
-  }],
-  player: {
-    type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Player'
-  },
-  tournament: {
-    type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Tournament',
-    required: true
-  },
-  user: {
-    type: _mongoose.Schema.Types.ObjectId,
-    ref: 'user'
-  },
-  points: {
-    type: Number,
-    default: 0
-  },
-  totalGoals: {
-    type: Number,
-    default: 0
-  },
-  matchs: [{
-    type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Match'
-  }]
-}, { timeStamps: true });
-
-TeamSchema.methods = {
-  async getTournamentTotalPoints() {
-    const matches = await _match2.default.find({ _id: { $in: this.matchs } });
-
-    return matches.reduce((obj, m) => {
-      const u = obj;
-      const t = this._id.equals(m.teamA) ? 'teamA' : 'teamB';
-
-      if (t === 'teamA') {
-        u.totalPoints += m.teamAPoints;
-        u.totalGoals += m.goalsA;
-      } else {
-        u.totalPoints += m.teamBPoints;
-        u.totalGoals += m.goalsB;
-      }
-
-      return u;
-    }, {
-      totalPoints: 0,
-      totalGoals: 0
-    });
-  },
-  toJSON() {
-    return {
-      _id: this._id,
-      teamName: this.teamName,
-      players: this.players,
-      points: this.points,
-      totalGoals: this.totalGoals,
-      tournament: this.tournament,
-      user: this.user
-    };
-  }
-};
-
-TeamSchema.statics = {
-  createTeam(args, user) {
-    return this.create(Object.assign({}, args, {
-      user
-    }));
-  }
-};
-
-exports.default = _mongoose2.default.model('Team', TeamSchema);
 
 /***/ }),
 /* 7 */
@@ -438,7 +434,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _mongoose = __webpack_require__(1);
+var _mongoose = __webpack_require__(2);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
@@ -446,11 +442,11 @@ var _roundrobin = __webpack_require__(36);
 
 var _roundrobin2 = _interopRequireDefault(_roundrobin);
 
-var _match = __webpack_require__(5);
+var _match = __webpack_require__(4);
 
 var _match2 = _interopRequireDefault(_match);
 
-var _team = __webpack_require__(6);
+var _team = __webpack_require__(1);
 
 var _team2 = _interopRequireDefault(_team);
 
@@ -505,6 +501,10 @@ const TournamentSchema = new _mongoose.Schema({
   teams: [{
     type: _mongoose.Schema.Types.ObjectId,
     ref: 'Team'
+  }],
+  matches: [{
+    type: _mongoose.Schema.Types.ObjectId,
+    ref: 'Match'
   }],
   leaderBoard: [{
     type: _mongoose.Schema.Types.ObjectId,
@@ -571,7 +571,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _mongoose = __webpack_require__(1);
+var _mongoose = __webpack_require__(2);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
@@ -587,7 +587,7 @@ var _jsonwebtoken2 = _interopRequireDefault(_jsonwebtoken);
 
 var _user = __webpack_require__(11);
 
-var _constants = __webpack_require__(2);
+var _constants = __webpack_require__(3);
 
 var _constants2 = _interopRequireDefault(_constants);
 
@@ -595,7 +595,7 @@ var _tournament = __webpack_require__(7);
 
 var _tournament2 = _interopRequireDefault(_tournament);
 
-var _team = __webpack_require__(6);
+var _team = __webpack_require__(1);
 
 var _team2 = _interopRequireDefault(_team);
 
@@ -754,11 +754,11 @@ module.exports = require("passport");
 "use strict";
 
 
-var _mongoose = __webpack_require__(1);
+var _mongoose = __webpack_require__(2);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var _constants = __webpack_require__(2);
+var _constants = __webpack_require__(3);
 
 var _constants2 = _interopRequireDefault(_constants);
 
@@ -885,7 +885,7 @@ var _express = __webpack_require__(0);
 
 var _express2 = _interopRequireDefault(_express);
 
-var _constants = __webpack_require__(2);
+var _constants = __webpack_require__(3);
 
 var _constants2 = _interopRequireDefault(_constants);
 
@@ -936,15 +936,15 @@ exports.matchById = matchById;
 exports.matchResult = matchResult;
 exports.getMatchesByTournamentId = getMatchesByTournamentId;
 
-var _httpStatus = __webpack_require__(4);
+var _httpStatus = __webpack_require__(6);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
-var _match = __webpack_require__(5);
+var _match = __webpack_require__(4);
 
 var _match2 = _interopRequireDefault(_match);
 
-var _team = __webpack_require__(6);
+var _team = __webpack_require__(1);
 
 var _team2 = _interopRequireDefault(_team);
 
@@ -961,7 +961,6 @@ async function matchById(req, res) {
 
 async function matchResult(req, res) {
   try {
-    // const { teamA, teamB } = req.body;
     const goalsA = Number(req.body.goalsA);
     const goalsB = Number(req.body.goalsB);
     const match = await _match2.default.findById(req.params.id);
@@ -975,10 +974,10 @@ async function matchResult(req, res) {
     match.goalsB = 0;
 
     if (goalsA > goalsB) {
-      // If teamA more points increment 3 points
+      // If teamA more goals increment 3 points
       match.teamAPoints += 3;
     } else if (goalsA < goalsB) {
-      // If teamB more points increment 3 points
+      // If teamB more goals increment 3 points
       match.teamBPoints += 3;
     } else {
       // If match null both get 1 point
@@ -1032,7 +1031,7 @@ var _match = __webpack_require__(17);
 
 var MatchController = _interopRequireWildcard(_match);
 
-var _auth = __webpack_require__(3);
+var _auth = __webpack_require__(5);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -1060,11 +1059,11 @@ exports.getTeamById = getTeamById;
 exports.createTeam = createTeam;
 exports.getTeamByUserId = getTeamByUserId;
 
-var _httpStatus = __webpack_require__(4);
+var _httpStatus = __webpack_require__(6);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
-var _team = __webpack_require__(6);
+var _team = __webpack_require__(1);
 
 var _team2 = _interopRequireDefault(_team);
 
@@ -1128,7 +1127,7 @@ var _team = __webpack_require__(19);
 
 var TeamController = _interopRequireWildcard(_team);
 
-var _auth = __webpack_require__(3);
+var _auth = __webpack_require__(5);
 
 var _team2 = __webpack_require__(21);
 
@@ -1194,7 +1193,7 @@ exports.deleteTournament = deleteTournament;
 exports.getTournamentsByUserId = getTournamentsByUserId;
 exports.getTournamentByTeamId = getTournamentByTeamId;
 
-var _httpStatus = __webpack_require__(4);
+var _httpStatus = __webpack_require__(6);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
@@ -1206,11 +1205,11 @@ var _user = __webpack_require__(8);
 
 var _user2 = _interopRequireDefault(_user);
 
-var _match = __webpack_require__(5);
+var _match = __webpack_require__(4);
 
 var _match2 = _interopRequireDefault(_match);
 
-var _team = __webpack_require__(6);
+var _team = __webpack_require__(1);
 
 var _team2 = _interopRequireDefault(_team);
 
@@ -1242,13 +1241,22 @@ async function getTournamentById(req, res) {
     const tournament = await _tournament2.default.findById(req.params.id).populate('user').populate('leaderBoard');
     const teams = await _team2.default.find({
       tournament: req.params.id
-    }).sort({ points: -1 });
-    const matches = await _match2.default.find({
-      tournament_id: req.params.id
     });
+    const matches = await _match2.default.find({
+      tournamentId: req.params.id
+    }).populate('teamA').populate('teamB');
+    const pointsArr = [];
+    for (let i = 0; i < teams.length; i++) {
+      const team = await _team2.default.findById(teams[i]);
+      const info = await team.getTournamentTotalPoints();
+      pointsArr.push(info);
+    }
+    pointsArr.sort((a, b) => a.points === b.points ? b.totalGoals - a.totalGoals : b.points - a.points);
+    // console.log('I\'ll kill you motherfucker',pointsArr);
     return res.status(_httpStatus2.default.OK).json(Object.assign({}, tournament.toJSON(), {
       teams,
-      matches
+      matches,
+      pointsArr
     }));
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
@@ -1333,7 +1341,7 @@ var _tournament = __webpack_require__(22);
 
 var tournamentController = _interopRequireWildcard(_tournament);
 
-var _auth = __webpack_require__(3);
+var _auth = __webpack_require__(5);
 
 var _tournament2 = __webpack_require__(24);
 
@@ -1412,7 +1420,7 @@ exports.getUser = getUser;
 exports.updateUser = updateUser;
 exports.deleteUser = deleteUser;
 
-var _httpStatus = __webpack_require__(4);
+var _httpStatus = __webpack_require__(6);
 
 var _httpStatus2 = _interopRequireDefault(_httpStatus);
 
@@ -1486,7 +1494,7 @@ var _expressValidation = __webpack_require__(9);
 
 var _expressValidation2 = _interopRequireDefault(_expressValidation);
 
-var _auth = __webpack_require__(3);
+var _auth = __webpack_require__(5);
 
 var _user = __webpack_require__(25);
 
