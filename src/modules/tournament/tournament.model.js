@@ -88,6 +88,11 @@ TournamentSchema.statics = {
   },
 };
 
+TournamentSchema.pre('remove', async function(next){
+  await Team.remove({tournament: this._id})
+  return next()
+});
+
 async function createMatch(week, game, tournamentId) {
   const m = await MatchModel.create({
     round: week,

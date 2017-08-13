@@ -43,7 +43,7 @@ export async function getTournamentById(req, res) {
     })
     const matches = await MatchModel.find({
       tournamentId: req.params.id,
-    }).populate('teamA').populate('teamB');
+    }).populate('teamA').populate('teamB').sort({round: 1});
     const pointsArr = []
     for(let i = 0; i < teams.length; i++){
       const team = await TeamModel.findById(teams[i])
@@ -56,7 +56,6 @@ export async function getTournamentById(req, res) {
     // console.log('I\'ll kill you motherfucker',pointsArr);
     return res.status(HTTPStatus.OK).json({
       ...tournament.toJSON(),
-      teams,
       matches,
       pointsArr
     });
@@ -96,10 +95,8 @@ export async function updateTournament(req, res) {
 
 export async function deleteTournament(req, res) {
   try {
-    await Tournament.findByIdAndRemove(req.params.id).pre('remove', async function(next){
-      await TeamModel.remove({tournament: this._id})
-      return next()
-    });
+    const tournament = await Tournament.findById(req.params.id)
+    tournament.remove()
     return res.sendStatus(HTTPStatus.OK);
   } catch (e) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);

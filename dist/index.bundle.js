@@ -520,6 +520,11 @@ TournamentSchema.statics = {
   }
 };
 
+TournamentSchema.pre('remove', async function (next) {
+  await _team2.default.remove({ tournament: this._id });
+  return next();
+});
+
 async function createMatch(week, game, tournamentId) {
   const m = await _match2.default.create({
     round: week,
@@ -1244,7 +1249,7 @@ async function getTournamentById(req, res) {
     });
     const matches = await _match2.default.find({
       tournamentId: req.params.id
-    }).populate('teamA').populate('teamB');
+    }).populate('teamA').populate('teamB').sort({ round: 1 });
     const pointsArr = [];
     for (let i = 0; i < teams.length; i++) {
       const team = await _team2.default.findById(teams[i]);
@@ -1254,7 +1259,6 @@ async function getTournamentById(req, res) {
     pointsArr.sort((a, b) => a.points === b.points ? b.totalGoals - a.totalGoals : b.points - a.points);
     // console.log('I\'ll kill you motherfucker',pointsArr);
     return res.status(_httpStatus2.default.OK).json(Object.assign({}, tournament.toJSON(), {
-      teams,
       matches,
       pointsArr
     }));
@@ -1288,10 +1292,8 @@ async function updateTournament(req, res) {
 
 async function deleteTournament(req, res) {
   try {
-    await _tournament2.default.findByIdAndRemove(req.params.id).pre('remove', async function (next) {
-      await _team2.default.remove({ tournament: this._id });
-      return next();
-    });
+    const tournament = await _tournament2.default.findById(req.params.id);
+    tournament.remove();
     return res.sendStatus(_httpStatus2.default.OK);
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
