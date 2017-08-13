@@ -69,12 +69,6 @@ const TournamentSchema = new Schema(
         ref: 'Match'
       }
     ],
-    leaderBoard: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Team',
-      },
-    ],
   },
   { timeStamps: true },
 );

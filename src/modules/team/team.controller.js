@@ -20,7 +20,6 @@ export async function createTeam(req, res) {
       {
         $push: {
           teams: team,
-          leaderBoard: team,
         },
       },
     );

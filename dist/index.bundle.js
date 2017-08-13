@@ -505,10 +505,6 @@ const TournamentSchema = new _mongoose.Schema({
   matches: [{
     type: _mongoose.Schema.Types.ObjectId,
     ref: 'Match'
-  }],
-  leaderBoard: [{
-    type: _mongoose.Schema.Types.ObjectId,
-    ref: 'Team'
   }]
 }, { timeStamps: true });
 
@@ -1092,8 +1088,7 @@ async function createTeam(req, res) {
     const team = await _team2.default.createTeam(req.body, req.user._id);
     await _tournament2.default.findByIdAndUpdate(req.body.tournament, {
       $push: {
-        teams: team,
-        leaderBoard: team
+        teams: team
       }
     });
     return res.status(_httpStatus2.default.CREATED).json(team.toJSON());
