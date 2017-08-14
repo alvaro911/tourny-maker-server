@@ -133,7 +133,9 @@ const TeamSchema = new _mongoose.Schema({
 
 TeamSchema.methods = {
   async getTournamentTotalPoints() {
-    const matches = await _match2.default.find({ _id: { $in: this.matchs } });
+    const matches = await _match2.default.find({
+      _id: { $in: this.matchs }
+    });
     return matches.reduce((obj, m) => {
       const u = obj;
       const t = this._id.equals(m.teamA) ? 'teamA' : 'teamB';
@@ -546,7 +548,9 @@ TournamentSchema.methods = {
       (0, _roundrobin2.default)(teams.length, teams).forEach((round, i) => {
         const week = i + 1;
 
-        round.forEach(async game => await createMatch(week, game, this._id, { $push: { matches: game } }));
+        round.forEach(async game => await createMatch(week, game, this._id, {
+          $push: { matches: game }
+        }));
       });
 
       const matches = await _match2.default.find({
@@ -1008,7 +1012,9 @@ async function matchResult(req, res) {
 
 async function getMatchesByTournamentId(req, res) {
   try {
-    const matches = await _match2.default.find({ tournamentId: req.params.id }).sort({ round: 1 }).populate('teamA').populate('teamB');
+    const matches = await _match2.default.find({
+      tournamentId: req.params.id
+    }).sort({ round: 1 }).populate('teamA').populate('teamB');
     return res.status(_httpStatus2.default.OK).json(matches);
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
@@ -1251,8 +1257,7 @@ async function getTournamentById(req, res) {
       const info = await team.getTournamentTotalPoints();
       pointsArr.push(info);
     }
-    pointsArr.sort((a, b) => a.points === b.points ? b.totalGoals - a.totalGoals : b.points - a.points);
-    // console.log('I\'ll kill you motherfucker',pointsArr);
+    pointsArr.sort((a, b) => b.points - a.points);
     return res.status(_httpStatus2.default.OK).json(Object.assign({}, tournament.toJSON(), {
       matches,
       pointsArr

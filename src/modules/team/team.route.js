@@ -9,7 +9,11 @@ const routes = Router();
 
 routes.get('/:id', authJwt, TeamController.getTeamById);
 
-routes.get('/user/:id', authJwt, TeamController.getTeamByUserId);
+routes.get(
+  '/user/:id',
+  authJwt,
+  TeamController.getTeamByUserId,
+);
 
 routes.post(
   '/createTeam',

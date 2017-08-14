@@ -54,7 +54,7 @@ const UserSchema = new Schema(
       type: String,
       default: 'CREATOR',
       enum: ['PLAYER', 'CREATOR', 'ADMIN'],
-      required: [true, 'user role is required']
+      required: [true, 'user role is required'],
     },
   },
   { timeStamps: true },
@@ -69,7 +69,7 @@ UserSchema.pre('save', function(next) {
 
 UserSchema.pre('remove', async function(next) {
   await TournamentModel.remove({ user: this._id });
-  await TeamModel.remove({user: this._id})
+  await TeamModel.remove({ user: this._id });
   return next();
 });
 
@@ -96,7 +96,7 @@ UserSchema.methods = {
       email: this.email,
       firstName: this.firstName,
       lastName: this.lastName,
-      role: this.role
+      role: this.role,
     };
   },
   toJSON() {

@@ -23,7 +23,6 @@ export async function matchResult(req, res) {
     const teamA = await TeamModel.findById(match.teamA);
     const teamB = await TeamModel.findById(match.teamB);
 
-
     match.teamAPoints = 0;
     match.teamBPoints = 0;
     match.goalsA = 0;
@@ -54,7 +53,7 @@ export async function matchResult(req, res) {
     return res.status(HTTPStatus.OK).json({
       match,
       teamA: pointTeamA,
-      teamB: pointTeamB
+      teamB: pointTeamB,
     });
   } catch (e) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);
@@ -63,7 +62,9 @@ export async function matchResult(req, res) {
 
 export async function getMatchesByTournamentId(req, res) {
   try {
-    const matches = await MatchModel.find({ tournamentId: req.params.id })
+    const matches = await MatchModel.find({
+      tournamentId: req.params.id,
+    })
       .sort({ round: 1 })
       .populate('teamA')
       .populate('teamB');

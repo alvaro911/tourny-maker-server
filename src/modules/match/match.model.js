@@ -3,7 +3,7 @@ import mongoose, { Schema } from 'mongoose';
 const MatchSchema = new Schema({
   round: {
     type: Number,
-    required: false
+    required: false,
   },
   teamA: {
     type: Schema.Types.ObjectId,
@@ -12,7 +12,7 @@ const MatchSchema = new Schema({
   goalsA: {
     type: Number,
     default: 0,
-    required: false
+    required: false,
   },
   teamB: {
     type: Schema.Types.ObjectId,
@@ -20,30 +20,30 @@ const MatchSchema = new Schema({
   },
   teamAPoints: {
     type: Number,
-    default: 0
+    default: 0,
   },
   teamBPoints: {
     type: Number,
-    default: 0
+    default: 0,
   },
   goalsB: {
     type: Number,
     default: 0,
-    required: false
+    required: false,
   },
   fullTime: {
     type: Boolean,
     default: false,
-    required: false
+    required: false,
   },
   matches: {
     type: Schema.Types.Mixed,
-    required: false
+    required: false,
   },
   tournamentId: {
     type: Schema.Types.ObjectId,
     ref: 'Tournament',
-    required: false
+    required: false,
   },
 });
 

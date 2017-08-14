@@ -14,7 +14,10 @@ export async function getTeamById(req, res) {
 
 export async function createTeam(req, res) {
   try {
-    const team = await Team.createTeam(req.body, req.user._id);
+    const team = await Team.createTeam(
+      req.body,
+      req.user._id,
+    );
     await Tournament.findByIdAndUpdate(
       req.body.tournament,
       {
@@ -33,8 +36,8 @@ export async function createTeam(req, res) {
 
 export async function getTeamByUserId(req, res) {
   try {
-    const team = await Team.find({user: req.params.id})
-    return res.status(HTTPStatus.OK).json(team)
+    const team = await Team.find({ user: req.params.id });
+    return res.status(HTTPStatus.OK).json(team);
   } catch (e) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);
   }

@@ -66,8 +66,8 @@ const TournamentSchema = new Schema(
     matches: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Match'
-      }
+        ref: 'Match',
+      },
     ],
   },
   { timeStamps: true },
@@ -82,9 +82,9 @@ TournamentSchema.statics = {
   },
 };
 
-TournamentSchema.pre('remove', async function(next){
-  await Team.remove({tournament: this._id})
-  return next()
+TournamentSchema.pre('remove', async function(next) {
+  await Team.remove({ tournament: this._id });
+  return next();
 });
 
 async function createMatch(week, game, tournamentId) {
@@ -117,7 +117,9 @@ TournamentSchema.methods = {
 
         round.forEach(
           async game =>
-            await createMatch(week, game, this._id, {$push:{matches: game}}),
+            await createMatch(week, game, this._id, {
+              $push: { matches: game },
+            }),
         );
       });
 

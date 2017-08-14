@@ -8,8 +8,9 @@ const testConfig = {
 };
 
 const prodConfig = {
-  MONGO_URL: 'mongodb://alvaro911:Password1@ds141118.mlab.com:41118/tournaments',
-  JWT_SECRET: 'iWannaRock'
+  MONGO_URL:
+    'mongodb://alvaro911:Password1@ds141118.mlab.com:41118/tournaments',
+  JWT_SECRET: 'iWannaRock',
 };
 
 const defaultConfig = {

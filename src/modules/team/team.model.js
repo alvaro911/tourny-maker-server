@@ -34,38 +34,47 @@ const TeamSchema = new Schema(
     },
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'user'
+      ref: 'user',
     },
-    matchs: [{
-      type: Schema.Types.ObjectId,
-      ref: 'Match'
-    }]
+    matchs: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Match',
+      },
+    ],
   },
   { timeStamps: true },
 );
 
 TeamSchema.methods = {
   async getTournamentTotalPoints() {
-    const matches = await Match.find({ _id: { $in: this.matchs }});
-    return matches.reduce((obj, m) => {
-      const u = obj;
-      const t = this._id.equals(m.teamA) ? 'teamA' : 'teamB';
+    const matches = await Match.find({
+      _id: { $in: this.matchs },
+    });
+    return matches.reduce(
+      (obj, m) => {
+        const u = obj;
+        const t = this._id.equals(m.teamA)
+          ? 'teamA'
+          : 'teamB';
 
-      if (t === 'teamA') {
-        u.totalPoints += m.teamAPoints
-        u.totalGoals += m.goalsA;
-      } else {
-        u.totalPoints += m.teamBPoints
-        u.totalGoals += m.goalsB;
-      }
+        if (t === 'teamA') {
+          u.totalPoints += m.teamAPoints;
+          u.totalGoals += m.goalsA;
+        } else {
+          u.totalPoints += m.teamBPoints;
+          u.totalGoals += m.goalsB;
+        }
 
-      return u;
-    }, {
-      teamId: this._id,
-      teamName: this.teamName,
-      totalPoints: 0,
-      totalGoals: 0
-    })
+        return u;
+      },
+      {
+        teamId: this._id,
+        teamName: this.teamName,
+        totalPoints: 0,
+        totalGoals: 0,
+      },
+    );
   },
   toJSON() {
     return {
@@ -76,7 +85,7 @@ TeamSchema.methods = {
       totalGoals: this.totalGoals,
       tournament: this.tournament,
       user: this.user,
-      matchs: this.matchs
+      matchs: this.matchs,
     };
   },
 };
@@ -85,7 +94,7 @@ TeamSchema.statics = {
   createTeam(args, user) {
     return this.create({
       ...args,
-      user
+      user,
     });
   },
 };

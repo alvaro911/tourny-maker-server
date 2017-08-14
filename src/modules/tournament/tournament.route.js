@@ -4,7 +4,7 @@ import validate from 'express-validation';
 import * as tournamentController from './tournament.controller';
 import {
   authJwt,
-  creatorIsRequired
+  creatorIsRequired,
 } from '../../services/auth.services';
 import tournamentValidation from './tournament.validator';
 
@@ -58,6 +58,10 @@ routes.delete(
   tournamentController.deleteTournament,
 );
 
-routes.get('/team/:id', authJwt, tournamentController.getTournamentByTeamId)
+routes.get(
+  '/team/:id',
+  authJwt,
+  tournamentController.getTournamentByTeamId,
+);
 
 export default routes;
