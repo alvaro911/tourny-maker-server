@@ -47,8 +47,8 @@ const TeamSchema = new Schema(
 );
 
 TeamSchema.methods = {
-  async getTournamentTotalPoints() {
-    const matches = await Match.find({
+  getTournamentTotalPoints() {
+    const matches = Match.find({
       _id: { $in: this.matchs },
     });
     return matches.reduce(
