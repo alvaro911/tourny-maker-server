@@ -81,8 +81,6 @@ TeamSchema.methods = {
       _id: this._id,
       teamName: this.teamName,
       players: this.players,
-      points: this.points,
-      totalGoals: this.totalGoals,
       tournament: this.tournament,
       user: this.user,
       matchs: this.matchs,
