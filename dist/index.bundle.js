@@ -161,8 +161,6 @@ TeamSchema.methods = {
       _id: this._id,
       teamName: this.teamName,
       players: this.players,
-      points: this.points,
-      totalGoals: this.totalGoals,
       tournament: this.tournament,
       user: this.user,
       matchs: this.matchs
@@ -327,11 +325,11 @@ var _passport = __webpack_require__(12);
 
 var _passport2 = _interopRequireDefault(_passport);
 
-var _passportLocal = __webpack_require__(35);
+var _passportLocal = __webpack_require__(34);
 
 var _passportLocal2 = _interopRequireDefault(_passportLocal);
 
-var _passportJwt = __webpack_require__(34);
+var _passportJwt = __webpack_require__(33);
 
 var _user = __webpack_require__(8);
 
@@ -440,7 +438,7 @@ var _mongoose = __webpack_require__(2);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var _roundrobin = __webpack_require__(36);
+var _roundrobin = __webpack_require__(35);
 
 var _roundrobin2 = _interopRequireDefault(_roundrobin);
 
@@ -580,7 +578,7 @@ var _mongoose = __webpack_require__(2);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var _validator = __webpack_require__(37);
+var _validator = __webpack_require__(36);
 
 var _validator2 = _interopRequireDefault(_validator);
 
@@ -798,10 +796,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _morgan = __webpack_require__(33);
-
-var _morgan2 = _interopRequireDefault(_morgan);
-
 var _helmet = __webpack_require__(31);
 
 var _helmet2 = _interopRequireDefault(_helmet);
@@ -824,8 +818,8 @@ var _cors2 = _interopRequireDefault(_cors);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const isDev = process.env.NODE_ENV === 'development';
-const isProd = process.env.NODE_ENV === 'production';
+// const isDev = process.env.NODE_ENV === 'development';
+const isProd = process.env.NODE_ENV === 'production'; // import morgan from 'morgan';
 
 exports.default = app => {
   if (isProd) {
@@ -838,9 +832,9 @@ exports.default = app => {
   app.use(_bodyParser2.default.urlencoded({ extended: true }));
   app.use(_passport2.default.initialize());
 
-  if (isDev) {
-    app.use((0, _morgan2.default)('dev'));
-  }
+  // if (isDev) {
+  //   app.use(morgan('dev'));
+  // }
 };
 
 /***/ }),
@@ -1105,8 +1099,12 @@ async function createTeam(req, res) {
 
 async function getTeamByUserId(req, res) {
   try {
-    const team = await _team2.default.find({ user: req.params.id });
-    return res.status(_httpStatus2.default.OK).json(team);
+    const team = await _team2.default.findById(req.params.id);
+    const points = await team.getTournamentTotalPoints();
+    return res.status(_httpStatus2.default.OK).json(Object.assign({}, team.toJSON(), {
+      team,
+      points
+    }));
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);
   }
@@ -1560,28 +1558,22 @@ module.exports = require("jsonwebtoken");
 /* 33 */
 /***/ (function(module, exports) {
 
-module.exports = require("morgan");
+module.exports = require("passport-jwt");
 
 /***/ }),
 /* 34 */
 /***/ (function(module, exports) {
 
-module.exports = require("passport-jwt");
+module.exports = require("passport-local");
 
 /***/ }),
 /* 35 */
 /***/ (function(module, exports) {
 
-module.exports = require("passport-local");
-
-/***/ }),
-/* 36 */
-/***/ (function(module, exports) {
-
 module.exports = require("roundrobin");
 
 /***/ }),
-/* 37 */
+/* 36 */
 /***/ (function(module, exports) {
 
 module.exports = require("validator");
