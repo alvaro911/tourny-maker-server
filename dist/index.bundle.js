@@ -132,8 +132,8 @@ const TeamSchema = new _mongoose.Schema({
 }, { timeStamps: true });
 
 TeamSchema.methods = {
-  getTournamentTotalPoints() {
-    const matches = _match2.default.find({
+  async getTournamentTotalPoints() {
+    const matches = await _match2.default.find({
       _id: { $in: this.matchs }
     });
     return matches.reduce((obj, m) => {
