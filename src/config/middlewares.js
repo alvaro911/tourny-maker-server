@@ -1,11 +1,11 @@
-import morgan from 'morgan';
+// import morgan from 'morgan';
 import helmet from 'helmet';
 import bodyParser from 'body-parser';
 import compression from 'compression';
 import passport from 'passport';
 import cors from 'cors';
 
-const isDev = process.env.NODE_ENV === 'development';
+// const isDev = process.env.NODE_ENV === 'development';
 const isProd = process.env.NODE_ENV === 'production';
 
 export default app => {
@@ -19,7 +19,7 @@ export default app => {
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(passport.initialize());
 
-  if (isDev) {
-    app.use(morgan('dev'));
-  }
+  // if (isDev) {
+  //   app.use(morgan('dev'));
+  // }
 };

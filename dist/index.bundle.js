@@ -798,10 +798,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _morgan = __webpack_require__(33);
-
-var _morgan2 = _interopRequireDefault(_morgan);
-
 var _helmet = __webpack_require__(31);
 
 var _helmet2 = _interopRequireDefault(_helmet);
@@ -824,8 +820,8 @@ var _cors2 = _interopRequireDefault(_cors);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const isDev = process.env.NODE_ENV === 'development';
-const isProd = process.env.NODE_ENV === 'production';
+// const isDev = process.env.NODE_ENV === 'development';
+const isProd = process.env.NODE_ENV === 'production'; // import morgan from 'morgan';
 
 exports.default = app => {
   if (isProd) {
@@ -838,9 +834,9 @@ exports.default = app => {
   app.use(_bodyParser2.default.urlencoded({ extended: true }));
   app.use(_passport2.default.initialize());
 
-  if (isDev) {
-    app.use((0, _morgan2.default)('dev'));
-  }
+  // if (isDev) {
+  //   app.use(morgan('dev'));
+  // }
 };
 
 /***/ }),
@@ -1557,12 +1553,7 @@ module.exports = require("helmet");
 module.exports = require("jsonwebtoken");
 
 /***/ }),
-/* 33 */
-/***/ (function(module, exports) {
-
-module.exports = require("morgan");
-
-/***/ }),
+/* 33 */,
 /* 34 */
 /***/ (function(module, exports) {
 
