@@ -53,9 +53,7 @@ export async function getTournamentById(req, res) {
       const info = await team.getTournamentTotalPoints();
       pointsArr.push(info);
     }
-    pointsArr.sort(
-      (a, b) => b.points - a.points
-    );
+    pointsArr.sort((a, b) => b.points - a.points);
     return res.status(HTTPStatus.OK).json({
       ...tournament.toJSON(),
       matches,
