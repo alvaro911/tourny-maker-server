@@ -39,7 +39,6 @@ export async function getTeamByUserId(req, res) {
     const team = await Team.findById(req.params.id);
     const points = await team.getTournamentTotalPoints()
     return res.status(HTTPStatus.OK).json({
-      ...team.toJSON(),
       team,
       teamPoints: points
     });
