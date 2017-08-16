@@ -1099,11 +1099,17 @@ async function createTeam(req, res) {
 
 async function getTeamByUserId(req, res) {
   try {
-    const team = await _team2.default.findById(req.params.id);
-    // const points = await team.getTournamentTotalPoints()
+    const teams = await _team2.default.find({ user: req.params.id });
+    const things = teams.map(team => team._id);
+    const pointsArr = [];
+    for (let i = 0; i < things.length; i++) {
+      const team = await _team2.default.findById(things[i]);
+      const points = await team.getTournamentTotalPoints();
+      pointsArr.push(points);
+    }
     return res.status(_httpStatus2.default.OK).json({
-      team
-      // teamPoints: points
+      teams,
+      pointsArr
     });
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);

@@ -36,13 +36,19 @@ export async function createTeam(req, res) {
 
 export async function getTeamByUserId(req, res) {
   try {
-    const team = await Team.findById(req.params.id);
-    // const points = await team.getTournamentTotalPoints()
+    const teams = await Team.find({user: req.params.id})
+    const things = teams.map(team => team._id)
+    const pointsArr = []
+    for(let i = 0; i < things.length; i++){
+      const team = await Team.findById(things[i])
+      const points = await team.getTournamentTotalPoints()
+      pointsArr.push(points)
+    }
     return res.status(HTTPStatus.OK).json({
-      team,
-      // teamPoints: points
-    });
+      teams,
+      pointsArr
+    })
   } catch (e) {
-    return res.status(HTTPStatus.BAD_REQUEST).json(e);
+    return res.status(HTTPStatus.BAD_REQUEST).json(e)
   }
 }
