@@ -37,10 +37,10 @@ export async function createTeam(req, res) {
 export async function getTeamByUserId(req, res) {
   try {
     const team = await Team.findById(req.params.id);
-    const points = await team.getTournamentTotalPoints()
+    // const points = await team.getTournamentTotalPoints()
     return res.status(HTTPStatus.OK).json({
       team,
-      teamPoints: points
+      // teamPoints: points
     });
   } catch (e) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);
