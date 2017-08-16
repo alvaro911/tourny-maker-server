@@ -1103,7 +1103,7 @@ async function getTeamByUserId(req, res) {
     const points = await team.getTournamentTotalPoints();
     return res.status(_httpStatus2.default.OK).json(Object.assign({}, team.toJSON(), {
       team,
-      points
+      teamPoints: points
     }));
   } catch (e) {
     return res.status(_httpStatus2.default.BAD_REQUEST).json(e);

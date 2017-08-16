@@ -41,7 +41,7 @@ export async function getTeamByUserId(req, res) {
     return res.status(HTTPStatus.OK).json({
       ...team.toJSON(),
       team,
-      points
+      teamPoints: points
     });
   } catch (e) {
     return res.status(HTTPStatus.BAD_REQUEST).json(e);
